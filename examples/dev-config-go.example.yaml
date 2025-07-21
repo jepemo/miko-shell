@@ -1,0 +1,50 @@
+# Example configuration for a Go project
+name: go-project
+container-provider: docker
+image: golang:1.22-alpine
+pre-install:
+  - apk add --no-cache git curl bash make
+  - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+  - go install golang.org/x/tools/cmd/goimports@latest
+shell:
+  init-hook:
+    - echo "Go development environment initialized"
+    - go version
+  scripts:
+    - name: test
+      description: "Run Go tests for all packages"
+      commands:
+        - echo "Running Go tests..."
+        - go test ./...
+    - name: build
+      description: "Build the Go application"
+      commands:
+        - go build -o app .
+    - name: run
+      description: "Run the Go application"
+      commands:
+        - go run .
+    - name: lint
+      description: "Run linter checks"
+      commands:
+        - golangci-lint run
+    - name: format
+      description: "Format Go code and organize imports"
+      commands:
+        - go fmt ./...
+        - goimports -w .
+    - name: mod
+      description: "Tidy and download Go modules"
+      commands:
+        - go mod tidy
+        - go mod download
+    - name: coverage
+      description: "Run tests with coverage report"
+      commands:
+        - go test -coverprofile=coverage.out ./...
+        - go tool cover -html=coverage.out -o coverage.html
+    - name: clean
+      description: "Clean build cache and generated files"
+      commands:
+        - go clean -cache
+        - rm -f app coverage.out coverage.html

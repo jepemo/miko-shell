@@ -1,0 +1,122 @@
+# Example configuration for an Elixir/Phoenix project
+name: phoenix-project
+container-provider: docker
+image: elixir:1.15-alpine
+pre-install:
+  - apk add --no-cache git curl bash build-base nodejs npm postgresql-client inotify-tools
+  - mix local.hex --force
+  - mix local.rebar --force
+  - mix archive.install hex phx_new --force
+shell:
+  init-hook:
+    - echo "Elixir/Phoenix development environment initialized"
+    - elixir --version
+    - mix --version
+    - node --version
+  scripts:
+    - name: new
+      description: "Create a new Phoenix application"
+      commands:
+        - mix phx.new . --app my_app --no-install
+    - name: setup
+      description: "Set up the Phoenix application (install dependencies and prepare database)"
+      commands:
+        - mix setup
+    - name: deps
+      description: "Install and update dependencies"
+      commands:
+        - mix deps.get
+    - name: compile
+      description: "Compile the Phoenix application"
+      commands:
+        - mix compile
+    - name: test
+      description: "Run the test suite"
+      commands:
+        - echo "Running Phoenix tests..."
+        - mix test
+    - name: server
+      description: "Start the Phoenix development server"
+      commands:
+        - mix phx.server
+    - name: routes
+      description: "List all application routes"
+      commands:
+        - mix phx.routes
+    - name: migrate
+      description: "Run database migrations"
+      commands:
+        - mix ecto.migrate
+    - name: rollback
+      description: "Rollback database migrations"
+      commands:
+        - mix ecto.rollback
+    - name: seed
+      description: "Seed the database with initial data"
+      commands:
+        - mix run priv/repo/seeds.exs
+    - name: reset
+      description: "Reset the database (drop, create, migrate, seed)"
+      commands:
+        - mix ecto.reset
+    - name: gen-migration
+      description: "Generate a new database migration"
+      commands:
+        - mix ecto.gen.migration
+    - name: gen-schema
+      description: "Generate an Ecto schema"
+      commands:
+        - mix phx.gen.schema
+    - name: gen-context
+      description: "Generate a context with functions around an Ecto schema"
+      commands:
+        - mix phx.gen.context
+    - name: gen-html
+      description: "Generate HTML controller, views, and context for a resource"
+      commands:
+        - mix phx.gen.html
+    - name: gen-json
+      description: "Generate JSON controller and context for a resource"
+      commands:
+        - mix phx.gen.json
+    - name: gen-live
+      description: "Generate LiveView with HTML and context for a resource"
+      commands:
+        - mix phx.gen.live
+    - name: assets-build
+      description: "Build assets for development"
+      commands:
+        - mix assets.build
+    - name: assets-deploy
+      description: "Build and optimize assets for production"
+      commands:
+        - mix assets.deploy
+    - name: format
+      description: "Format the code using Elixir formatter"
+      commands:
+        - mix format
+    - name: credo
+      description: "Run Credo static code analysis"
+      commands:
+        - mix credo
+    - name: dialyzer
+      description: "Run Dialyzer static analysis"
+      commands:
+        - mix dialyzer
+    - name: iex
+      description: "Start IEx with the project loaded"
+      commands:
+        - iex -S mix
+    - name: console
+      description: "Start IEx with Phoenix server"
+      commands:
+        - iex -S mix phx.server
+    - name: clean
+      description: "Clean compiled files and dependencies"
+      commands:
+        - mix clean
+        - mix deps.clean --all
+    - name: coverage
+      description: "Run tests with coverage report"
+      commands:
+        - mix test --cover

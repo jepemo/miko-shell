@@ -1,0 +1,49 @@
+# Example configuration for a JavaScript/Node.js project
+name: javascript-project
+container-provider: docker
+image: node:18-alpine
+pre-install:
+  - apk add --no-cache git curl bash
+  - npm install -g npm@latest
+  - npm install -g yarn eslint prettier
+shell:
+  init-hook:
+    - echo "JavaScript development environment initialized"
+    - node --version
+    - npm --version
+  scripts:
+    - name: test
+      description: "Run JavaScript tests"
+      commands:
+        - echo "Running JavaScript tests..."
+        - npm test
+    - name: install
+      description: "Install npm dependencies"
+      commands:
+        - npm install
+    - name: lint
+      description: "Run ESLint on source code"
+      commands:
+        - eslint src/
+    - name: format
+      description: "Format code with Prettier"
+      commands:
+        - prettier --write src/
+    - name: build
+      description: "Build the application"
+      commands:
+        - npm run build
+    - name: dev
+      description: "Start the development server"
+      commands:
+        - npm run dev
+    - name: start
+      description: "Start the application in production mode"
+      commands:
+        - npm start
+    - name: clean
+      description: "Clean dependencies and build artifacts"
+      commands:
+        - rm -rf node_modules
+        - rm -rf dist
+        - rm -rf build

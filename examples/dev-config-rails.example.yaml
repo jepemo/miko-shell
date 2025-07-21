@@ -1,0 +1,128 @@
+# Example configuration for a Ruby on Rails project
+name: rails-project
+container-provider: docker
+image: ruby:3.2-alpine
+pre-install:
+  - apk add --no-cache git curl bash build-base sqlite-dev postgresql-dev nodejs npm yarn
+  - gem install bundler rails
+shell:
+  init-hook:
+    - echo "Ruby on Rails development environment initialized"
+    - ruby --version
+    - rails --version
+    - bundle --version
+    - node --version
+  scripts:
+    - name: new
+      description: "Create a new Rails application"
+      commands:
+        - rails new . --skip-bundle --database=postgresql
+    - name: setup
+      description: "Set up the Rails application (install gems and prepare database)"
+      commands:
+        - bundle install
+        - rails db:setup
+    - name: install
+      description: "Install gem dependencies"
+      commands:
+        - bundle install
+    - name: update
+      description: "Update gem dependencies"
+      commands:
+        - bundle update
+    - name: test
+      description: "Run the test suite"
+      commands:
+        - echo "Running Rails tests..."
+        - bundle exec rspec
+    - name: server
+      description: "Start the Rails development server"
+      commands:
+        - bundle exec rails server -b 0.0.0.0
+    - name: console
+      description: "Start the Rails console"
+      commands:
+        - bundle exec rails console
+    - name: routes
+      description: "List all application routes"
+      commands:
+        - bundle exec rails routes
+    - name: migrate
+      description: "Run database migrations"
+      commands:
+        - bundle exec rails db:migrate
+    - name: rollback
+      description: "Rollback database migrations"
+      commands:
+        - bundle exec rails db:rollback
+    - name: seed
+      description: "Seed the database with initial data"
+      commands:
+        - bundle exec rails db:seed
+    - name: reset
+      description: "Reset the database (drop, create, migrate, seed)"
+      commands:
+        - bundle exec rails db:reset
+    - name: create-db
+      description: "Create the database"
+      commands:
+        - bundle exec rails db:create
+    - name: drop-db
+      description: "Drop the database"
+      commands:
+        - bundle exec rails db:drop
+    - name: setup-db
+      description: "Set up the database (create, migrate, seed)"
+      commands:
+        - bundle exec rails db:setup
+    - name: gen-migration
+      description: "Generate a new database migration"
+      commands:
+        - bundle exec rails generate migration
+    - name: gen-model
+      description: "Generate a new model"
+      commands:
+        - bundle exec rails generate model
+    - name: gen-controller
+      description: "Generate a new controller"
+      commands:
+        - bundle exec rails generate controller
+    - name: gen-scaffold
+      description: "Generate a complete scaffold (model, controller, views)"
+      commands:
+        - bundle exec rails generate scaffold
+    - name: assets-precompile
+      description: "Precompile assets for production"
+      commands:
+        - bundle exec rails assets:precompile
+    - name: assets-clean
+      description: "Clean compiled assets"
+      commands:
+        - bundle exec rails assets:clean
+    - name: rubocop
+      description: "Run RuboCop static code analysis"
+      commands:
+        - bundle exec rubocop
+    - name: rubocop-fix
+      description: "Run RuboCop with auto-fix"
+      commands:
+        - bundle exec rubocop -A
+    - name: brakeman
+      description: "Run Brakeman security scanner"
+      commands:
+        - bundle exec brakeman
+    - name: annotate
+      description: "Annotate models with schema information"
+      commands:
+        - bundle exec annotate
+    - name: clean
+      description: "Clean dependencies and lock files"
+      commands:
+        - rm -rf vendor/
+        - rm -f Gemfile.lock
+        - rm -rf node_modules/
+        - rm -f yarn.lock
+    - name: logs
+      description: "Show development logs"
+      commands:
+        - tail -f log/development.log

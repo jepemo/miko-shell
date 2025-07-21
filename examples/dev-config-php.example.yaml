@@ -1,0 +1,56 @@
+# Example configuration for a PHP project
+name: php-project
+container-provider: docker
+image: php:8.2-cli-alpine
+pre-install:
+  - apk add --no-cache git curl bash zip unzip
+  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  - docker-php-ext-install pdo pdo_mysql
+shell:
+  init-hook:
+    - echo "PHP development environment initialized"
+    - php --version
+    - composer --version
+  scripts:
+    - name: test
+      description: "Run PHP tests with PHPUnit"
+      commands:
+        - echo "Running PHP tests..."
+        - ./vendor/bin/phpunit
+    - name: install
+      description: "Install PHP dependencies with Composer"
+      commands:
+        - composer install
+    - name: update
+      description: "Update PHP dependencies"
+      commands:
+        - composer update
+    - name: run
+      description: "Start PHP built-in development server"
+      commands:
+        - php -S 0.0.0.0:8000 -t public
+    - name: lint
+      description: "Check PHP syntax"
+      commands:
+        - php -l src/
+    - name: phpcs
+      description: "Run PHP CodeSniffer (style checker)"
+      commands:
+        - ./vendor/bin/phpcs src/
+    - name: phpcbf
+      description: "Run PHP Code Beautifier and Fixer"
+      commands:
+        - ./vendor/bin/phpcbf src/
+    - name: psalm
+      description: "Run Psalm static analysis"
+      commands:
+        - ./vendor/bin/psalm
+    - name: phpstan
+      description: "Run PHPStan static analysis"
+      commands:
+        - ./vendor/bin/phpstan analyse src/
+    - name: clean
+      description: "Clean dependencies and lock file"
+      commands:
+        - rm -rf vendor/
+        - rm -f composer.lock

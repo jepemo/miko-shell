@@ -1,0 +1,49 @@
+# Example configuration for a Java project (Maven)
+name: java-project
+container-provider: docker
+image: openjdk:17-jdk-alpine
+pre-install:
+  - apk add --no-cache git curl bash maven
+shell:
+  init-hook:
+    - echo "Java development environment initialized"
+    - java -version
+    - mvn --version
+  scripts:
+    - name: test
+      description: "Run Java tests with Maven"
+      commands:
+        - echo "Running Java tests..."
+        - mvn test
+    - name: compile
+      description: "Compile Java source code"
+      commands:
+        - mvn compile
+    - name: package
+      description: "Package the application (create JAR)"
+      commands:
+        - mvn package
+    - name: clean
+      description: "Clean compiled files"
+      commands:
+        - mvn clean
+    - name: install
+      description: "Clean, compile, test, and install to local repository"
+      commands:
+        - mvn clean install
+    - name: run
+      description: "Run the Java application"
+      commands:
+        - mvn exec:java
+    - name: format
+      description: "Format Java code"
+      commands:
+        - mvn formatter:format
+    - name: verify
+      description: "Run verification checks"
+      commands:
+        - mvn verify
+    - name: dependency
+      description: "Show dependency tree"
+      commands:
+        - mvn dependency:tree

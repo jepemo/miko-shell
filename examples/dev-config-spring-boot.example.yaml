@@ -1,0 +1,75 @@
+# Example configuration for a Spring Boot project
+name: spring-boot-project
+container-provider: docker
+image: openjdk:17-jdk-alpine
+pre-install:
+  - apk add --no-cache git curl bash maven
+  - wget https://start.spring.io/starter.zip -O /tmp/spring-boot-cli.zip
+shell:
+  init-hook:
+    - echo "Spring Boot development environment initialized"
+    - java -version
+    - mvn --version
+  scripts:
+    - name: create
+      description: "Create a new Spring Boot project"
+      commands:
+        - curl https://start.spring.io/starter.zip -d dependencies=web,data-jpa,h2,devtools -d javaVersion=17 -d bootVersion=3.0.0 -d groupId=com.example -d artifactId=demo -o demo.zip
+        - unzip demo.zip
+        - rm demo.zip
+    - name: compile
+      description: "Compile Java source code"
+      commands:
+        - mvn compile
+    - name: test
+      description: "Run unit tests"
+      commands:
+        - mvn test
+    - name: package
+      description: "Package the application (create JAR)"
+      commands:
+        - mvn package
+    - name: run
+      description: "Run Spring Boot application with Maven"
+      commands:
+        - mvn spring-boot:run
+    - name: clean
+      description: "Clean compiled files"
+      commands:
+        - mvn clean
+    - name: install
+      description: "Clean, compile, test, and install to local repository"
+      commands:
+        - mvn clean install
+    - name: verify
+      description: "Run verification checks"
+      commands:
+        - mvn verify
+    - name: dependency-tree
+      description: "Show dependency tree"
+      commands:
+        - mvn dependency:tree
+    - name: spring-boot-run
+      description: "Run Spring Boot application from JAR"
+      commands:
+        - java -jar target/*.jar
+    - name: dev
+      description: "Run with development profile"
+      commands:
+        - mvn spring-boot:run -Dspring-boot.run.profiles=dev
+    - name: test-integration
+      description: "Run integration tests"
+      commands:
+        - mvn test -Dtest=**/*IT
+    - name: actuator
+      description: "Check application health endpoint"
+      commands:
+        - curl http://localhost:8080/actuator/health
+    - name: format
+      description: "Format Java code"
+      commands:
+        - mvn spring-javaformat:apply
+    - name: checkstyle
+      description: "Run code style checks"
+      commands:
+        - mvn checkstyle:check

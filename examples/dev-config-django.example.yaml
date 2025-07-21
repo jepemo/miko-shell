@@ -1,0 +1,87 @@
+# Example configuration for a Django project
+name: django-project
+container-provider: docker
+image: python:3.11-slim
+pre-install:
+  - apt-get update && apt-get install -y git curl build-essential libpq-dev
+  - pip install --upgrade pip
+  - pip install django djangorestframework celery redis psycopg2-binary
+shell:
+  init-hook:
+    - echo "Django development environment initialized"
+    - python --version
+    - django-admin --version
+  scripts:
+    - name: create
+      description: "Create a new Django project"
+      commands:
+        - django-admin startproject myproject .
+    - name: startapp
+      description: "Create a new Django app"
+      commands:
+        - python manage.py startapp myapp
+    - name: install
+      description: "Install Python dependencies"
+      commands:
+        - pip install -r requirements.txt
+    - name: migrate
+      description: "Apply database migrations"
+      commands:
+        - python manage.py migrate
+    - name: makemigrations
+      description: "Create new database migrations"
+      commands:
+        - python manage.py makemigrations
+    - name: runserver
+      description: "Start Django development server"
+      commands:
+        - python manage.py runserver 0.0.0.0:8000
+    - name: shell
+      description: "Open Django shell"
+      commands:
+        - python manage.py shell
+    - name: dbshell
+      description: "Open database shell"
+      commands:
+        - python manage.py dbshell
+    - name: test
+      description: "Run Django tests"
+      commands:
+        - python manage.py test
+    - name: collectstatic
+      description: "Collect static files for production"
+      commands:
+        - python manage.py collectstatic --noinput
+    - name: createsuperuser
+      description: "Create Django admin superuser"
+      commands:
+        - python manage.py createsuperuser
+    - name: loaddata
+      description: "Load initial data from fixtures"
+      commands:
+        - python manage.py loaddata fixtures/initial_data.json
+    - name: dumpdata
+      description: "Export data to fixtures"
+      commands:
+        - python manage.py dumpdata > fixtures/data.json
+    - name: check
+      description: "Check Django project for common issues"
+      commands:
+        - python manage.py check
+    - name: showmigrations
+      description: "Show migration status"
+      commands:
+        - python manage.py showmigrations
+    - name: flush
+      description: "Remove all data from database"
+      commands:
+        - python manage.py flush
+    - name: celery
+      description: "Start Celery worker"
+      commands:
+        - celery -A myproject worker --loglevel=info
+    - name: clean
+      description: "Clean Python cache files"
+      commands:
+        - find . -name "*.pyc" -delete
+        - find . -name "__pycache__" -type d -exec rm -rf {} +

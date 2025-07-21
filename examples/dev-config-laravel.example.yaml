@@ -1,0 +1,122 @@
+# Example configuration for a Laravel project
+name: laravel-project
+container-provider: docker
+image: php:8.2-cli-alpine
+pre-install:
+  - apk add --no-cache git curl bash zip unzip nodejs npm
+  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  - docker-php-ext-install pdo pdo_mysql bcmath
+  - composer global require laravel/installer
+shell:
+  init-hook:
+    - echo "Laravel development environment initialized"
+    - php --version
+    - composer --version
+    - node --version
+  scripts:
+    - name: create
+      description: "Create a new Laravel project"
+      commands:
+        - composer create-project laravel/laravel .
+    - name: install
+      description: "Install PHP dependencies"
+      commands:
+        - composer install
+    - name: update
+      description: "Update PHP dependencies"
+      commands:
+        - composer update
+    - name: serve
+      description: "Start Laravel development server"
+      commands:
+        - php artisan serve --host=0.0.0.0 --port=8000
+    - name: migrate
+      description: "Run database migrations"
+      commands:
+        - php artisan migrate
+    - name: migrate-fresh
+      description: "Drop all tables and re-run migrations"
+      commands:
+        - php artisan migrate:fresh
+    - name: migrate-seed
+      description: "Run migrations and seed database"
+      commands:
+        - php artisan migrate --seed
+    - name: seed
+      description: "Seed the database"
+      commands:
+        - php artisan db:seed
+    - name: tinker
+      description: "Start Laravel Tinker REPL"
+      commands:
+        - php artisan tinker
+    - name: test
+      description: "Run Laravel tests"
+      commands:
+        - php artisan test
+    - name: make-controller
+      description: "Generate a new controller"
+      commands:
+        - php artisan make:controller
+    - name: make-model
+      description: "Generate a new model"
+      commands:
+        - php artisan make:model
+    - name: make-migration
+      description: "Generate a new migration"
+      commands:
+        - php artisan make:migration
+    - name: make-seeder
+      description: "Generate a new seeder"
+      commands:
+        - php artisan make:seeder
+    - name: make-middleware
+      description: "Generate a new middleware"
+      commands:
+        - php artisan make:middleware
+    - name: route-list
+      description: "List all application routes"
+      commands:
+        - php artisan route:list
+    - name: config-cache
+      description: "Cache configuration files"
+      commands:
+        - php artisan config:cache
+    - name: route-cache
+      description: "Cache route definitions"
+      commands:
+        - php artisan route:cache
+    - name: view-cache
+      description: "Cache view files"
+      commands:
+        - php artisan view:cache
+    - name: clear-cache
+      description: "Clear all cached files"
+      commands:
+        - php artisan cache:clear
+        - php artisan config:clear
+        - php artisan route:clear
+        - php artisan view:clear
+    - name: queue-work
+      description: "Start processing queued jobs"
+      commands:
+        - php artisan queue:work
+    - name: npm-install
+      description: "Install Node.js dependencies"
+      commands:
+        - npm install
+    - name: npm-dev
+      description: "Build assets for development"
+      commands:
+        - npm run dev
+    - name: npm-build
+      description: "Build assets for production"
+      commands:
+        - npm run build
+    - name: clean
+      description: "Clean dependencies and lock files"
+      commands:
+        - rm -rf vendor/
+        - rm -rf node_modules/
+        - rm -f composer.lock
+        - rm -f package-lock.json

@@ -1,0 +1,60 @@
+# Example configuration for a Ruby project
+name: ruby-project
+container-provider: docker
+image: ruby:3.2-alpine
+pre-install:
+  - apk add --no-cache git curl bash build-base sqlite-dev
+  - gem install bundler
+shell:
+  init-hook:
+    - echo "Ruby development environment initialized"
+    - ruby --version
+    - gem --version
+    - bundle --version
+  scripts:
+    - name: test
+      description: "Run Ruby tests with RSpec"
+      commands:
+        - echo "Running Ruby tests..."
+        - bundle exec rspec
+    - name: install
+      description: "Install gem dependencies"
+      commands:
+        - bundle install
+    - name: update
+      description: "Update gem dependencies"
+      commands:
+        - bundle update
+    - name: run
+      description: "Run the Ruby application"
+      commands:
+        - ruby app.rb
+    - name: server
+      description: "Start Rails server"
+      commands:
+        - bundle exec rails server -b 0.0.0.0
+    - name: console
+      description: "Start Rails console"
+      commands:
+        - bundle exec rails console
+    - name: migrate
+      description: "Run database migrations"
+      commands:
+        - bundle exec rails db:migrate
+    - name: seed
+      description: "Seed the database"
+      commands:
+        - bundle exec rails db:seed
+    - name: rubocop
+      description: "Run RuboCop static code analysis"
+      commands:
+        - bundle exec rubocop
+    - name: rubocop-fix
+      description: "Run RuboCop with auto-fix"
+      commands:
+        - bundle exec rubocop -A
+    - name: clean
+      description: "Clean dependencies and lock file"
+      commands:
+        - rm -rf vendor/
+        - rm -f Gemfile.lock

@@ -1,0 +1,64 @@
+# Example configuration for a Next.js project
+name: nextjs-project
+container-provider: docker
+image: node:18-alpine
+pre-install:
+  - apk add --no-cache git curl bash
+  - npm install -g npm@latest
+  - npm install -g create-next-app
+shell:
+  init-hook:
+    - echo "Next.js development environment initialized"
+    - node --version
+    - npm --version
+  scripts:
+    - name: create
+      description: "Create a new Next.js application"
+      commands:
+        - npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+    - name: install
+      description: "Install dependencies"
+      commands:
+        - npm install
+    - name: dev
+      description: "Start development server"
+      commands:
+        - npm run dev
+    - name: build
+      description: "Build for production"
+      commands:
+        - npm run build
+    - name: start
+      description: "Start production server"
+      commands:
+        - npm run start
+    - name: test
+      description: "Run tests"
+      commands:
+        - npm run test
+    - name: lint
+      description: "Run ESLint checks"
+      commands:
+        - npm run lint
+    - name: lint-fix
+      description: "Run ESLint with auto-fix"
+      commands:
+        - npm run lint -- --fix
+    - name: type-check
+      description: "Run TypeScript type checking"
+      commands:
+        - npx tsc --noEmit
+    - name: format
+      description: "Format code with Prettier"
+      commands:
+        - npx prettier --write .
+    - name: analyze
+      description: "Analyze bundle size"
+      commands:
+        - npm run analyze
+    - name: clean
+      description: "Clean build artifacts and dependencies"
+      commands:
+        - rm -rf .next
+        - rm -rf node_modules
+        - rm -f package-lock.json

@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build binaries
+        run: |
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o miko-shell-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o miko-shell-linux-arm64 .
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o miko-shell-darwin-amd64 .
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o miko-shell-darwin-arm64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o miko-shell-windows-amd64.exe .
+
+      - name: Create checksums
+        run: |
+          sha256sum miko-shell-* > checksums.txt
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            awk '/^## \[/{if(++count==2) exit} count==1' CHANGELOG.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Release ${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            miko-shell-*
+            checksums.txt
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

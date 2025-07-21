@@ -1,0 +1,30 @@
+# Example configuration for a Python project
+name: python-project
+container-provider: docker
+image: python:3.9-slim
+pre-install:
+  - apt-get update && apt-get install -y git curl
+  - pip install --upgrade pip
+  - pip install pytest flask requests
+shell:
+  init-hook:
+    - echo "Python development environment initialized"
+    - python --version
+  scripts:
+    - name: test
+      description: "Run Python tests and show version"
+      commands:
+        - echo "Running Python tests..."
+        - python -c "import sys; print('Python version:', sys.version)"
+    - name: install
+      description: "Install Python dependencies from requirements.txt"
+      commands:
+        - pip install -r requirements.txt
+    - name: lint
+      description: "Check Python syntax compilation"
+      commands:
+        - python -m py_compile *.py
+    - name: shell
+      description: "Open Python interactive shell"
+      commands:
+        - python

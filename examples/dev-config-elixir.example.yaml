@@ -1,0 +1,61 @@
+# Example configuration for an Elixir project
+name: elixir-project
+container-provider: docker
+image: elixir:1.15-alpine
+pre-install:
+  - apk add --no-cache git curl bash build-base
+  - mix local.hex --force
+  - mix local.rebar --force
+  - mix archive.install hex phx_new --force
+shell:
+  init-hook:
+    - echo "Elixir development environment initialized"
+    - elixir --version
+    - mix --version
+  scripts:
+    - name: test
+      description: "Run Elixir tests"
+      commands:
+        - echo "Running Elixir tests..."
+        - mix test
+    - name: deps
+      description: "Install and update dependencies"
+      commands:
+        - mix deps.get
+    - name: compile
+      description: "Compile the Elixir project"
+      commands:
+        - mix compile
+    - name: run
+      description: "Run the Elixir application"
+      commands:
+        - mix run
+    - name: format
+      description: "Format Elixir code"
+      commands:
+        - mix format
+    - name: credo
+      description: "Run Credo static code analysis"
+      commands:
+        - mix credo
+    - name: dialyzer
+      description: "Run Dialyzer static analysis"
+      commands:
+        - mix dialyzer
+    - name: phx-server
+      description: "Start Phoenix server"
+      commands:
+        - mix phx.server
+    - name: iex
+      description: "Start IEx with the project loaded"
+      commands:
+        - iex -S mix
+    - name: clean
+      description: "Clean compiled files and dependencies"
+      commands:
+        - mix clean
+        - mix deps.clean --all
+    - name: coverage
+      description: "Run tests with coverage report"
+      commands:
+        - mix test --cover
