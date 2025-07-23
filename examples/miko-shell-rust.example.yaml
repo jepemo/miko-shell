@@ -1,12 +1,13 @@
 # Example configuration for a Rust project
 name: rust-project
-container-provider: docker
-image: rust:1.75-alpine
-pre-install:
-  - apk add --no-cache git curl bash musl-dev
-  - rustup component add clippy rustfmt
+container:
+  provider: docker
+  image: rust:1.75-alpine
+  setup:
+    - apk add --no-cache git curl bash musl-dev
+    - rustup component add clippy rustfmt
 shell:
-  init-hook:
+  startup:
     - echo "Rust development environment initialized"
     - rustc --version
     - cargo --version

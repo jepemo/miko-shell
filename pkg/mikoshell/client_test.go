@@ -57,7 +57,7 @@ func TestClient_InitProject(t *testing.T) {
 	}
 
 	t.Run("successful init", func(t *testing.T) {
-		err := client.InitProject()
+		err := client.InitProject(false)
 		if err != nil {
 			t.Fatalf("InitProject() failed: %v", err)
 		}
@@ -78,21 +78,58 @@ func TestClient_InitProject(t *testing.T) {
 			t.Errorf("Expected name '%s', got '%s'", expectedName, config.Name)
 		}
 
-		if config.ContainerProvider != "docker" {
-			t.Errorf("Expected container-provider 'docker', got '%s'", config.ContainerProvider)
+		if config.Container.Provider != "docker" {
+			t.Errorf("Expected provider 'docker', got '%s'", config.Container.Provider)
 		}
 
-		if config.Image != "alpine:latest" {
-			t.Errorf("Expected image 'alpine:latest', got '%s'", config.Image)
+		if config.Container.Image != "alpine:latest" {
+			t.Errorf("Expected image 'alpine:latest', got '%s'", config.Container.Image)
 		}
 	})
 
 	t.Run("config already exists", func(t *testing.T) {
 		// Try to init again - should fail
-		err := client.InitProject()
+		err := client.InitProject(false)
 		if err == nil {
 			t.Error("InitProject() should fail when config already exists")
 		}
+	})
+
+	// Clean up for dockerfile test
+	os.Remove(ConfigFileName)
+
+	t.Run("successful init with dockerfile", func(t *testing.T) {
+		err := client.InitProject(true)
+		if err != nil {
+			t.Fatalf("InitProject(true) failed: %v", err)
+		}
+
+		// Check if config file was created
+		if !ConfigExists() {
+			t.Error("InitProject(true) should create config file")
+		}
+
+		// Check if Dockerfile was created
+		if _, err := os.Stat("Dockerfile"); os.IsNotExist(err) {
+			t.Error("InitProject(true) should create Dockerfile")
+		}
+
+		// Load and verify config content
+		config, err := LoadConfig()
+		if err != nil {
+			t.Fatalf("Failed to load created config: %v", err)
+		}
+
+		if config.Container.Build == nil {
+			t.Error("Expected build configuration, got nil")
+		}
+
+		if config.Container.Build.Dockerfile != "./Dockerfile" {
+			t.Errorf("Expected dockerfile './Dockerfile', got '%s'", config.Container.Build.Dockerfile)
+		}
+
+		// Clean up Dockerfile
+		os.Remove("Dockerfile")
 	})
 }
 
@@ -131,12 +168,13 @@ func TestClient_LoadConfig(t *testing.T) {
 	t.Run("valid config file", func(t *testing.T) {
 		// Create config file
 		configContent := `name: test-project
-container-provider: docker
-image: alpine:latest
-pre-install:
-  - apk add curl
+container:
+  provider: docker
+  image: alpine:latest
+  setup:
+    - apk add curl
 shell:
-  init-hook:
+  startup:
     - echo "Hello"
   scripts:
     - name: test
@@ -168,8 +206,9 @@ shell:
 	t.Run("invalid container provider", func(t *testing.T) {
 		// Create config with invalid provider
 		configContent := `name: test-project
-container-provider: invalid-provider
-image: alpine:latest
+container:
+  provider: invalid-provider
+  image: alpine:latest
 `
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)
@@ -217,8 +256,9 @@ func TestClient_GetImageTag(t *testing.T) {
 	t.Run("with config loaded", func(t *testing.T) {
 		// Create config file
 		configContent := `name: test-project
-container-provider: docker
-image: alpine:latest
+container:
+  provider: docker
+  image: alpine:latest
 `
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)
@@ -258,9 +298,11 @@ func TestClient_GetConfig(t *testing.T) {
 
 	// Set a mock config
 	client.config = &Config{
-		Name:              "test",
-		ContainerProvider: "docker",
-		Image:            "alpine:latest",
+		Name: "test",
+		Container: Container{
+			Provider: "docker",
+			Image:   "alpine:latest",
+		},
 	}
 
 	config := client.GetConfig()

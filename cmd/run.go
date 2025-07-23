@@ -39,6 +39,6 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: dev-config.yaml)")
+	runCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
 	rootCmd.AddCommand(runCmd)
 }

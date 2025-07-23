@@ -8,11 +8,11 @@ You can use any of these examples with the `-c/--config` flag:
 
 ```bash
 # Use a specific configuration file
-./miko-shell build -c examples/dev-config-python.example.yaml
-./miko-shell run -c examples/dev-config-nextjs.example.yaml
-./miko-shell shell -c examples/dev-config-go.example.yaml
+./miko-shell build -c examples/miko-shell-python.example.yaml
+./miko-shell run -c examples/miko-shell-nextjs.example.yaml
+./miko-shell shell -c examples/miko-shell-go.example.yaml
 
-# Default behavior (looks for dev-config.yaml in current directory)
+# Default behavior (looks for miko-shell.yaml in current directory)
 ./miko-shell build
 ./miko-shell run
 ./miko-shell shell
@@ -20,85 +20,85 @@ You can use any of these examples with the `-c/--config` flag:
 
 ## 📁 Available Examples (14 configurations)
 
-### 🐍 Python - `dev-config-python.example.yaml`
+### 🐍 Python - `miko-shell-python.example.yaml`
 
 - Base image: `python:3.9-slim`
 - Pre-installed packages: pytest, flask, requests
 - Scripts: test, install, lint, shell
 
-### 🟨 JavaScript/Node.js - `dev-config-javascript.example.yaml`
+### 🟨 JavaScript/Node.js - `miko-shell-javascript.example.yaml`
 
 - Base image: `node:18-alpine`
 - Pre-installed tools: npm, yarn, eslint, prettier
 - Scripts: test, install, lint, format, build, dev, start, clean
 
-### 🔵 Go - `dev-config-go.example.yaml`
+### 🔵 Go - `miko-shell-go.example.yaml`
 
 - Base image: `golang:1.22-alpine`
 - Pre-installed tools: golangci-lint, goimports
 - Scripts: test, build, run, lint, format, mod, coverage, clean
 
-### 🦀 Rust - `dev-config-rust.example.yaml`
+### 🦀 Rust - `miko-shell-rust.example.yaml`
 
 - Base image: `rust:1.75-alpine`
 - Pre-installed tools: clippy, rustfmt
 - Scripts: test, build, release, run, lint, format, check, update, clean, doc
 
-### 🔮 Elixir - `dev-config-elixir.example.yaml`
+### 🔮 Elixir - `miko-shell-elixir.example.yaml`
 
 - Base image: `elixir:1.15-alpine`
 - Pre-installed tools: hex, rebar, phoenix
 - Scripts: test, deps, compile, run, format, credo, dialyzer, phx-server, iex, clean, coverage
 
-### 🔥 Elixir/Phoenix - `dev-config-phoenix.example.yaml`
+### 🔥 Elixir/Phoenix - `miko-shell-phoenix.example.yaml`
 
 - Base image: `elixir:1.15-alpine`
 - Pre-installed tools: hex, rebar, phoenix, nodejs, npm, postgresql-client
 - Scripts: new, setup, deps, compile, test, server, routes, migrate, rollback, seed, reset, gen-_, assets-_, format, credo, dialyzer, iex, console, clean, coverage
 
-### 🐘 PHP - `dev-config-php.example.yaml`
+### 🐘 PHP - `miko-shell-php.example.yaml`
 
 - Base image: `php:8.2-cli-alpine`
 - Pre-installed tools: composer, pdo extensions
 - Scripts: test, install, update, run, lint, phpcs, phpcbf, psalm, phpstan, clean
 
-### 💎 Ruby - `dev-config-ruby.example.yaml`
+### 💎 Ruby - `miko-shell-ruby.example.yaml`
 
 - Base image: `ruby:3.2-alpine`
 - Pre-installed tools: bundler, build tools
 - Scripts: test, install, update, run, server, console, migrate, seed, rubocop, rubocop-fix, clean
 
-### 🚂 Ruby/Rails - `dev-config-rails.example.yaml`
+### 🚂 Ruby/Rails - `miko-shell-rails.example.yaml`
 
 - Base image: `ruby:3.2-alpine`
 - Pre-installed tools: bundler, rails, nodejs, npm, yarn, postgresql-dev
 - Scripts: new, setup, install, update, test, server, console, routes, migrate, rollback, seed, reset, create-db, drop-db, setup-db, gen-_, assets-_, rubocop, rubocop-fix, brakeman, annotate, clean, logs
 
-### ☕ Java - `dev-config-java.example.yaml`
+### ☕ Java - `miko-shell-java.example.yaml`
 
 - Base image: `openjdk:17-jdk-alpine`
 - Pre-installed tools: Maven
 - Scripts: test, compile, run, package, clean, exec, dependency, site, verify
 
-### ⚛️ Next.js - `dev-config-nextjs.example.yaml`
+### ⚛️ Next.js - `miko-shell-nextjs.example.yaml`
 
 - Base image: `node:18-alpine`
 - Pre-installed tools: npm, TypeScript, Tailwind CSS, ESLint, Prettier
 - Scripts: dev, build, start, test, test-watch, lint, lint-fix, format, type-check, clean
 
-### 🐍 Django - `dev-config-django.example.yaml`
+### 🐍 Django - `miko-shell-django.example.yaml`
 
 - Base image: `python:3.11-slim`
 - Pre-installed tools: Django, PostgreSQL client, Redis tools, Celery
 - Scripts: runserver, startproject, startapp, migrate, makemigrations, createsuperuser, collectstatic, shell, dbshell, test, check, loaddata, dumpdata, flush, celery-worker, celery-beat, clean
 
-### 🍃 Spring Boot - `dev-config-spring-boot.example.yaml`
+### 🍃 Spring Boot - `miko-shell-spring-boot.example.yaml`
 
 - Base image: `openjdk:17-jdk-alpine`
 - Pre-installed tools: Maven, Spring Boot CLI
 - Scripts: run, test, build, clean, package, bootrun, dev, actuator, profile, docker-build
 
-### 🎨 Laravel - `dev-config-laravel.example.yaml`
+### 🎨 Laravel - `miko-shell-laravel.example.yaml`
 
 - Base image: `php:8.2-cli-alpine`
 - Pre-installed tools: Composer, Laravel installer, Node.js, NPM
@@ -110,7 +110,7 @@ You can use any of these examples with the `-c/--config` flag:
 1. Copy the example file for your language to your project root:
 
    ```bash
-   cp examples/dev-config-javascript.example.yaml dev-config.yaml
+   cp examples/miko-shell-javascript.example.yaml miko-shell.yaml
    ```
 
 2. Customize the configuration according to your project needs:
@@ -162,12 +162,13 @@ Each example follows the same structure:
 
 ```yaml
 name: project-name # Project identifier
-container-provider: docker # Container provider (docker/podman)
-image: base-image:tag # Base container image
-pre-install: # Commands to run during image build
-  - package installation commands
+container: # Container configuration
+  provider: docker # Container provider (docker/podman)
+  image: base-image:tag # Base container image
+  setup: # Commands to run during image build
+    - package installation commands
 shell:
-  init-hook: # Commands to run when shell starts
+  startup: # Commands to run when shell starts
     - initialization commands
   scripts: # Custom scripts
     - name: script-name

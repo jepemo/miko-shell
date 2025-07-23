@@ -1,6 +1,17 @@
 # Miko Shell 🐚
 
-A containerized development environment manager that allows you to work with different tools and dependencies without installing them locally.
+A containerized development environment manager that allows you to work with different tools and dependencies without i### Configuration Options
+
+- **name**: Project name used for container image naming (auto-generated from directory name)
+- **container.provider**: `docker` (default) or `podman`
+- **container.image**: Base container image to use
+- **container.setup**: List of commands to run during image build
+- **container.build**: Custom Dockerfile build configuration (alternative to image)
+  - **dockerfile**: Path to custom Dockerfile
+  - **context**: Build context directory (optional)
+  - **args**: Build arguments (optional)
+- **shell.startup**: Commands to run before any execution
+- **shell.scripts**: Named scripts that can be executed with `miko-shell run <name>`g them locally.
 
 [![CI](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml)
 [![Release](https://github.com/jepemo/miko-shell/actions/workflows/release.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/release.yml)
@@ -41,19 +52,24 @@ go install github.com/jepemo/miko-shell@latest
 1. **Initialize a new project**:
 
    ```bash
+   # Basic setup with pre-built image
    miko-shell init
+
+   # Advanced setup with custom Dockerfile
+   miko-shell init --dockerfile
    ```
 
-2. **Edit the configuration** (`dev-config.yaml`):
+2. **Edit the configuration** (`miko-shell.yaml`):
 
    ```yaml
    name: my-project
-   container-provider: docker
-   image: alpine:latest
-   pre-install:
-     - apk add curl git
+   container:
+     provider: docker
+     image: alpine:latest
+     setup:
+       - apk add curl git
    shell:
-     init-hook:
+     startup:
        - echo "Welcome to my development environment!"
      scripts:
        - name: test
@@ -78,46 +94,88 @@ go install github.com/jepemo/miko-shell@latest
 
 Pre-configured examples for different languages are available in the `examples/` directory:
 
-- **Python**: `examples/dev-config-python.example.yaml`
-- **JavaScript/Node.js**: `examples/dev-config-javascript.example.yaml`
-- **Go**: `examples/dev-config-go.example.yaml`
-- **Rust**: `examples/dev-config-rust.example.yaml`
-- **Elixir**: `examples/dev-config-elixir.example.yaml`
-- **Elixir/Phoenix**: `examples/dev-config-phoenix.example.yaml`
-- **PHP**: `examples/dev-config-php.example.yaml`
-- **Ruby**: `examples/dev-config-ruby.example.yaml`
-- **Ruby/Rails**: `examples/dev-config-rails.example.yaml`
-- **Java**: `examples/dev-config-java.example.yaml`
+- **Python**: `examples/miko-shell-python.example.yaml`
+- **JavaScript/Node.js**: `examples/miko-shell-javascript.example.yaml`
+- **Go**: `examples/miko-shell-go.example.yaml`
+- **Rust**: `examples/miko-shell-rust.example.yaml`
+- **Elixir**: `examples/miko-shell-elixir.example.yaml`
+- **Elixir/Phoenix**: `examples/miko-shell-phoenix.example.yaml`
+- **PHP**: `examples/miko-shell-php.example.yaml`
+- **Ruby**: `examples/miko-shell-ruby.example.yaml`
+- **Ruby/Rails**: `examples/miko-shell-rails.example.yaml`
+- **Java**: `examples/miko-shell-java.example.yaml`
 
 Copy and customize any example for your project:
 
 ```bash
-cp examples/dev-config-javascript.example.yaml dev-config.yaml
-# Edit dev-config.yaml to match your project needs
+cp examples/miko-shell-javascript.example.yaml miko-shell.yaml
+# Edit miko-shell.yaml to match your project needs
 ```
+
+## Initialization Options
+
+### Pre-built Image Mode (Default)
+
+```bash
+miko-shell init
+```
+
+Creates a configuration that uses a pre-built container image (Alpine Linux) with package installation commands in the `setup` section:
+
+```yaml
+name: my-project
+container:
+  provider: docker
+  image: alpine:latest
+  setup:
+    - apk add --no-cache curl git
+```
+
+### Custom Dockerfile Mode
+
+```bash
+miko-shell init --dockerfile  # or -d
+```
+
+Creates a configuration that uses a custom Dockerfile with build arguments, plus generates a sample Dockerfile:
+
+```yaml
+name: my-project
+container:
+  provider: docker
+  build:
+    dockerfile: ./Dockerfile
+    context: .
+    args:
+      VERSION: "1.0"
+```
+
+This mode also creates a `Dockerfile` with basic Alpine setup that you can customize for your specific needs.
 
 ## Configuration
 
-The `dev-config.yaml` file structure:
+The `miko-shell.yaml` file structure:
 
 ```yaml
 # Project name (used for container image naming)
 name: my-project
 
-# Container provider to use (docker or podman)
-container-provider: docker
+# Container configuration
+container:
+  # Container provider to use (docker or podman)
+  provider: docker
 
-# Base image for the container
-image: alpine:latest
+  # Base image for the container
+  image: alpine:latest
 
-# Commands to run during image build
-pre-install:
-  - apk add yamllint
+  # Commands to run during image build
+  setup:
+    - apk add yamllint
 
 # Shell configuration
 shell:
   # Commands to run before any shell/command execution
-  init-hook:
+  startup:
     - printf "Hello"
 
   # Custom scripts that can be executed with 'miko-shell run <script-name>'
@@ -134,15 +192,15 @@ shell:
 ### Configuration Options
 
 - **name**: Project name used for container image naming (auto-generated from directory name)
-- **container-provider**: `docker` (default) or `podman`
+- **provider**: `docker` (default) or `podman`
 - **image**: Base container image to use
-- **pre-install**: List of commands to run during image build
-- **shell.init-hook**: Commands to run before any execution
+- **setup**: List of commands to run during image build
+- **shell.startup**: Commands to run before any execution
 - **shell.scripts**: Named scripts that can be executed with `miko-shell run <name>`
 
 ## How it Works
 
-1. **Configuration**: The tool reads `dev-config.yaml` to understand project setup
+1. **Configuration**: The tool reads `miko-shell.yaml` to understand project setup
 2. **Project Naming**: Uses the `name` field (auto-generated from directory name) for container image naming
 3. **Image Building**: Creates a container image with specified base image and dependencies
 4. **Image Tagging**: Images are tagged with the project name and a hash of the configuration file
@@ -155,12 +213,13 @@ shell:
 
 ```yaml
 name: python-app
-container-provider: docker
-image: python:3.9-slim
-pre-install:
-  - pip install flask pytest
+container:
+  provider: docker
+  image: python:3.9-slim
+  setup:
+    - pip install flask pytest
 shell:
-  init-hook:
+  startup:
     - echo "Python environment ready"
   scripts:
     - name: test
@@ -175,12 +234,13 @@ shell:
 
 ```yaml
 name: nodejs-app
-container-provider: docker
-image: node:18-alpine
-pre-install:
-  - npm install -g pnpm
+container:
+  provider: docker
+  image: node:18-alpine
+  setup:
+    - npm install -g pnpm
 shell:
-  init-hook:
+  startup:
     - echo "Node.js environment ready"
   scripts:
     - name: install
@@ -193,6 +253,31 @@ shell:
       commands:
         - pnpm dev
 ```
+
+### Custom Dockerfile Build
+
+You can also use custom Dockerfiles instead of pre-built images:
+
+```yaml
+name: my-custom-app
+container:
+  provider: docker
+  build:
+    dockerfile: ./Dockerfile
+    context: .
+    args:
+      NODE_VERSION: "18"
+      ENVIRONMENT: "development"
+shell:
+  startup:
+    - echo "Custom environment ready"
+  scripts:
+    - name: build
+      commands:
+        - npm run build
+```
+
+This approach gives you complete control over the container environment while still benefiting from miko-shell's script management and development workflow.
 
 ## Requirements
 

@@ -1,13 +1,14 @@
 # Example configuration for a Go project
 name: go-project
-container-provider: docker
-image: golang:1.22-alpine
-pre-install:
-  - apk add --no-cache git curl bash make
-  - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-  - go install golang.org/x/tools/cmd/goimports@latest
+container:
+  provider: docker
+  image: golang:1.22-alpine
+  setup:
+    - apk add --no-cache git curl bash make
+    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - go install golang.org/x/tools/cmd/goimports@latest
 shell:
-  init-hook:
+  startup:
     - echo "Go development environment initialized"
     - go version
   scripts:

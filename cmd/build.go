@@ -10,7 +10,7 @@ import (
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build a container image from the configuration",
-	Long:  `Builds a container image based on the dev-config.yaml configuration file.`,
+	Long:  `Builds a container image based on the miko-shell.yaml configuration file.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := mikoshell.NewClient()
 		if err != nil {
@@ -40,6 +40,6 @@ var buildCmd = &cobra.Command{
 }
 
 func init() {
-	buildCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: dev-config.yaml)")
+	buildCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
 	rootCmd.AddCommand(buildCmd)
 }

@@ -38,9 +38,9 @@ echo "Available configuration examples:"
 echo
 
 # List all example files
-for file in examples/dev-config-*.example.yaml; do
+for file in examples/miko-shell-*.example.yaml; do
     if [ -f "$file" ]; then
-        language=$(basename "$file" .example.yaml | sed 's/dev-config-//')
+        language=$(basename "$file" .example.yaml | sed 's/miko-shell-//')
         print_color $BLUE "  📄 $language: $file"
     fi
 done
@@ -67,20 +67,20 @@ echo
 read -p "Enter your choice (1-15): " choice
 
 case $choice in
-    1) EXAMPLE_FILE="examples/dev-config-python.example.yaml"; LANG_NAME="Python" ;;
-    2) EXAMPLE_FILE="examples/dev-config-javascript.example.yaml"; LANG_NAME="JavaScript/Node.js" ;;
-    3) EXAMPLE_FILE="examples/dev-config-go.example.yaml"; LANG_NAME="Go" ;;
-    4) EXAMPLE_FILE="examples/dev-config-rust.example.yaml"; LANG_NAME="Rust" ;;
-    5) EXAMPLE_FILE="examples/dev-config-elixir.example.yaml"; LANG_NAME="Elixir" ;;
-    6) EXAMPLE_FILE="examples/dev-config-phoenix.example.yaml"; LANG_NAME="Elixir/Phoenix" ;;
-    7) EXAMPLE_FILE="examples/dev-config-php.example.yaml"; LANG_NAME="PHP" ;;
-    8) EXAMPLE_FILE="examples/dev-config-ruby.example.yaml"; LANG_NAME="Ruby" ;;
-    9) EXAMPLE_FILE="examples/dev-config-rails.example.yaml"; LANG_NAME="Ruby/Rails" ;;
-    10) EXAMPLE_FILE="examples/dev-config-java.example.yaml"; LANG_NAME="Java" ;;
-    11) EXAMPLE_FILE="examples/dev-config-nextjs.example.yaml"; LANG_NAME="Next.js" ;;
-    12) EXAMPLE_FILE="examples/dev-config-django.example.yaml"; LANG_NAME="Django" ;;
-    13) EXAMPLE_FILE="examples/dev-config-spring-boot.example.yaml"; LANG_NAME="Spring Boot" ;;
-    14) EXAMPLE_FILE="examples/dev-config-laravel.example.yaml"; LANG_NAME="Laravel" ;;
+    1) EXAMPLE_FILE="examples/miko-shell-python.example.yaml"; LANG_NAME="Python" ;;
+    2) EXAMPLE_FILE="examples/miko-shell-javascript.example.yaml"; LANG_NAME="JavaScript/Node.js" ;;
+    3) EXAMPLE_FILE="examples/miko-shell-go.example.yaml"; LANG_NAME="Go" ;;
+    4) EXAMPLE_FILE="examples/miko-shell-rust.example.yaml"; LANG_NAME="Rust" ;;
+    5) EXAMPLE_FILE="examples/miko-shell-elixir.example.yaml"; LANG_NAME="Elixir" ;;
+    6) EXAMPLE_FILE="examples/miko-shell-phoenix.example.yaml"; LANG_NAME="Elixir/Phoenix" ;;
+    7) EXAMPLE_FILE="examples/miko-shell-php.example.yaml"; LANG_NAME="PHP" ;;
+    8) EXAMPLE_FILE="examples/miko-shell-ruby.example.yaml"; LANG_NAME="Ruby" ;;
+    9) EXAMPLE_FILE="examples/miko-shell-rails.example.yaml"; LANG_NAME="Ruby/Rails" ;;
+    10) EXAMPLE_FILE="examples/miko-shell-java.example.yaml"; LANG_NAME="Java" ;;
+    11) EXAMPLE_FILE="examples/miko-shell-nextjs.example.yaml"; LANG_NAME="Next.js" ;;
+    12) EXAMPLE_FILE="examples/miko-shell-django.example.yaml"; LANG_NAME="Django" ;;
+    13) EXAMPLE_FILE="examples/miko-shell-spring-boot.example.yaml"; LANG_NAME="Spring Boot" ;;
+    14) EXAMPLE_FILE="examples/miko-shell-laravel.example.yaml"; LANG_NAME="Laravel" ;;
     15) print_color $YELLOW "Goodbye!"; exit 0 ;;
     *) print_color $RED "Invalid choice. Exiting."; exit 1 ;;
 esac
@@ -95,14 +95,14 @@ TEMP_DIR="/tmp/miko-shell-demo-$(date +%s)"
 mkdir -p "$TEMP_DIR"
 
 print_color $YELLOW "Creating demo environment in: $TEMP_DIR"
-cp "$EXAMPLE_FILE" "$TEMP_DIR/dev-config.yaml"
+cp "$EXAMPLE_FILE" "$TEMP_DIR/miko-shell.yaml"
 
 cd "$TEMP_DIR"
 
 echo
 print_color $GREEN "Configuration content:"
 print_color $BLUE "======================"
-cat dev-config.yaml
+cat miko-shell.yaml
 echo
 print_color $BLUE "======================"
 echo

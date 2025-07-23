@@ -1,12 +1,13 @@
 # Example configuration for a Ruby project
 name: ruby-project
-container-provider: docker
-image: ruby:3.2-alpine
-pre-install:
-  - apk add --no-cache git curl bash build-base sqlite-dev
-  - gem install bundler
+container:
+  provider: docker
+  image: ruby:3.2-alpine
+  setup:
+    - apk add --no-cache git curl bash build-base sqlite-dev
+    - gem install bundler
 shell:
-  init-hook:
+  startup:
     - echo "Ruby development environment initialized"
     - ruby --version
     - gem --version

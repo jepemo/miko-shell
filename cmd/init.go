@@ -9,23 +9,28 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Create a dev-config.yaml file in the current directory",
-	Long:  `Creates a dev-config.yaml configuration file with default values in the current directory.`,
+	Short: "Create a miko-shell.yaml file in the current directory",
+	Long: `Creates a miko-shell.yaml configuration file with default values in the current directory.
+
+By default, creates a configuration using a pre-built Alpine image with setup commands.
+Use --dockerfile flag to create a configuration with custom Dockerfile support.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := mikoshell.NewClient()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
 
-		if err := client.InitProject(); err != nil {
+		useDockerfile, _ := cmd.Flags().GetBool("dockerfile")
+		if err := client.InitProject(useDockerfile); err != nil {
 			return err
 		}
 
-		fmt.Println("Created dev-config.yaml successfully")
+		fmt.Println("Created miko-shell.yaml successfully")
 		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().BoolP("dockerfile", "d", false, "Generate configuration with custom Dockerfile instead of pre-built image")
 }

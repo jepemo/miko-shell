@@ -19,7 +19,7 @@ clean:
 	@echo "Cleaning..."
 	rm -f $(BINARY_NAME)
 	rm -rf $(BUILD_DIR)
-	rm -f dev-config.yaml
+	rm -f miko-shell.yaml
 	rm -f Dockerfile.miko-shell
 
 # Run tests

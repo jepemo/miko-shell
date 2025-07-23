@@ -165,12 +165,13 @@ func TestLoadConfig(t *testing.T) {
 
 	t.Run("valid config file", func(t *testing.T) {
 		configContent := `name: test-project
-container-provider: docker
-image: alpine:latest
-pre-install:
-  - apk add curl
+container:
+  provider: docker
+  image: alpine:latest
+  setup:
+    - apk add curl
 shell:
-  init-hook:
+  startup:
     - echo "Hello"
   scripts:
     - name: test
@@ -189,14 +190,14 @@ shell:
 		if config.Name != "test-project" {
 			t.Errorf("Expected name 'test-project', got '%s'", config.Name)
 		}
-		if config.ContainerProvider != "docker" {
-			t.Errorf("Expected container-provider 'docker', got '%s'", config.ContainerProvider)
+		if config.Container.Provider != "docker" {
+			t.Errorf("Expected provider 'docker', got '%s'", config.Container.Provider)
 		}
-		if config.Image != "alpine:latest" {
-			t.Errorf("Expected image 'alpine:latest', got '%s'", config.Image)
+		if config.Container.Image != "alpine:latest" {
+			t.Errorf("Expected image 'alpine:latest', got '%s'", config.Container.Image)
 		}
-		if len(config.PreInstall) != 1 || config.PreInstall[0] != "apk add curl" {
-			t.Errorf("Expected pre-install ['apk add curl'], got %v", config.PreInstall)
+		if len(config.Container.Setup) != 1 || config.Container.Setup[0] != "apk add curl" {
+			t.Errorf("Expected setup ['apk add curl'], got %v", config.Container.Setup)
 		}
 		if len(config.Shell.Scripts) != 1 || config.Shell.Scripts[0].Name != "test" {
 			t.Errorf("Expected script named 'test', got %v", config.Shell.Scripts)
@@ -205,8 +206,9 @@ shell:
 
 	t.Run("invalid container provider", func(t *testing.T) {
 		configContent := `name: test-project
-container-provider: invalid-provider
-image: alpine:latest
+container:
+  provider: invalid-provider
+  image: alpine:latest
 `
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)
@@ -223,8 +225,8 @@ func TestConfig_GetScript(t *testing.T) {
 	config := &Config{
 		Shell: Shell{
 			Scripts: []Script{
-				{Name: "test", Cmds: []string{"echo test"}},
-				{Name: "build", Cmds: []string{"go build"}},
+				{Name: "test", Commands: []string{"echo test"}},
+				{Name: "build", Commands: []string{"go build"}},
 			},
 		},
 	}
@@ -237,8 +239,8 @@ func TestConfig_GetScript(t *testing.T) {
 		if script.Name != "test" {
 			t.Errorf("Expected script name 'test', got '%s'", script.Name)
 		}
-		if len(script.Cmds) != 1 || script.Cmds[0] != "echo test" {
-			t.Errorf("Expected commands ['echo test'], got %v", script.Cmds)
+		if len(script.Commands.([]string)) != 1 || script.Commands.([]string)[0] != "echo test" {
+			t.Errorf("Expected commands ['echo test'], got %v", script.Commands)
 		}
 	})
 

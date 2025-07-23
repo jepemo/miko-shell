@@ -1,14 +1,15 @@
 # Example configuration for an Elixir/Phoenix project
 name: phoenix-project
-container-provider: docker
-image: elixir:1.15-alpine
-pre-install:
-  - apk add --no-cache git curl bash build-base nodejs npm postgresql-client inotify-tools
-  - mix local.hex --force
-  - mix local.rebar --force
-  - mix archive.install hex phx_new --force
+container:
+  provider: docker
+  image: elixir:1.15-alpine
+  setup:
+    - apk add --no-cache git curl bash build-base nodejs npm postgresql-client inotify-tools
+    - mix local.hex --force
+    - mix local.rebar --force
+    - mix archive.install hex phx_new --force
 shell:
-  init-hook:
+  startup:
     - echo "Elixir/Phoenix development environment initialized"
     - elixir --version
     - mix --version

@@ -1,13 +1,14 @@
 # Example configuration for a PHP project
 name: php-project
-container-provider: docker
-image: php:8.2-cli-alpine
-pre-install:
-  - apk add --no-cache git curl bash zip unzip
-  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-  - docker-php-ext-install pdo pdo_mysql
+container:
+  provider: docker
+  image: php:8.2-cli-alpine
+  setup:
+    - apk add --no-cache git curl bash zip unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - docker-php-ext-install pdo pdo_mysql
 shell:
-  init-hook:
+  startup:
     - echo "PHP development environment initialized"
     - php --version
     - composer --version

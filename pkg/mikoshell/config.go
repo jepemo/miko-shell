@@ -16,20 +16,33 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const ConfigFileName = "dev-config.yaml"
+const ConfigFileName = "miko-shell.yaml"
 
 // Config represents the project configuration
 type Config struct {
-	Name              string   `yaml:"name"`
-	ContainerProvider string   `yaml:"container-provider"`
-	Image            string   `yaml:"image"`
-	PreInstall       []string `yaml:"pre-install"`
-	Shell            Shell    `yaml:"shell"`
+	Name      string    `yaml:"name"`
+	Container Container `yaml:"container"`
+	Shell     Shell     `yaml:"shell"`
+}
+
+// Container represents the container configuration
+type Container struct {
+	Provider string            `yaml:"provider"`
+	Image    string            `yaml:"image,omitempty"`
+	Build    *ContainerBuild   `yaml:"build,omitempty"`
+	Setup    []string          `yaml:"setup,omitempty"`
+}
+
+// ContainerBuild represents custom image build configuration
+type ContainerBuild struct {
+	Dockerfile string            `yaml:"dockerfile"`
+	Context    string            `yaml:"context,omitempty"`
+	Args       map[string]string `yaml:"args,omitempty"`
 }
 
 // Shell represents the shell configuration
 type Shell struct {
-	InitHook []string `yaml:"init-hook"`
+	InitHook []string `yaml:"startup"`
 	Scripts  []Script `yaml:"scripts"`
 }
 
@@ -46,10 +59,10 @@ func ConfigExists() bool {
 	return err == nil
 }
 
-// LoadConfig loads the configuration from dev-config.yaml
+// LoadConfig loads the configuration from miko-shell.yaml
 func LoadConfig() (*Config, error) {
 	if !ConfigExists() {
-		return nil, fmt.Errorf("dev-config.yaml not found. Run 'miko-shell init' first")
+		return nil, fmt.Errorf("miko-shell.yaml not found. Run 'miko-shell init' first")
 	}
 
 	data, err := os.ReadFile(ConfigFileName)
@@ -63,13 +76,28 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// Set defaults
-	if config.ContainerProvider == "" {
-		config.ContainerProvider = "docker"
+	if config.Container.Provider == "" {
+		config.Container.Provider = "docker"
 	}
 
 	// Validate container provider
-	if config.ContainerProvider != "docker" && config.ContainerProvider != "podman" {
-		return nil, fmt.Errorf("invalid container-provider: %s. Must be 'docker' or 'podman'", config.ContainerProvider)
+	if config.Container.Provider != "docker" && config.Container.Provider != "podman" {
+		return nil, fmt.Errorf("invalid provider: %s. Must be 'docker' or 'podman'", config.Container.Provider)
+	}
+
+	// Validate that either image or build is specified
+	if config.Container.Image == "" && config.Container.Build == nil {
+		return nil, fmt.Errorf("either 'container.image' or 'container.build' must be specified")
+	}
+
+	// Validate build configuration if present
+	if config.Container.Build != nil {
+		if config.Container.Build.Dockerfile == "" {
+			return nil, fmt.Errorf("'container.build.dockerfile' is required when using custom build")
+		}
+		if config.Container.Build.Context == "" {
+			config.Container.Build.Context = "."
+		}
 	}
 
 	return &config, nil
@@ -88,13 +116,28 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	}
 
 	// Set defaults
-	if config.ContainerProvider == "" {
-		config.ContainerProvider = "docker"
+	if config.Container.Provider == "" {
+		config.Container.Provider = "docker"
 	}
 
 	// Validate container provider
-	if config.ContainerProvider != "docker" && config.ContainerProvider != "podman" {
-		return nil, fmt.Errorf("invalid container-provider: %s. Must be 'docker' or 'podman'", config.ContainerProvider)
+	if config.Container.Provider != "docker" && config.Container.Provider != "podman" {
+		return nil, fmt.Errorf("invalid provider: %s. Must be 'docker' or 'podman'", config.Container.Provider)
+	}
+
+	// Validate that either image or build is specified
+	if config.Container.Image == "" && config.Container.Build == nil {
+		return nil, fmt.Errorf("either 'container.image' or 'container.build' must be specified")
+	}
+
+	// Validate build configuration if present
+	if config.Container.Build != nil {
+		if config.Container.Build.Dockerfile == "" {
+			return nil, fmt.Errorf("'container.build.dockerfile' is required when using custom build")
+		}
+		if config.Container.Build.Context == "" {
+			config.Container.Build.Context = "."
+		}
 	}
 
 	return &config, nil

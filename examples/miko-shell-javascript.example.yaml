@@ -1,13 +1,14 @@
 # Example configuration for a JavaScript/Node.js project
 name: javascript-project
-container-provider: docker
-image: node:18-alpine
-pre-install:
-  - apk add --no-cache git curl bash
-  - npm install -g npm@latest
-  - npm install -g yarn eslint prettier
+container:
+  provider: docker
+  image: node:18-alpine
+  setup:
+    - apk add --no-cache git curl bash
+    - npm install -g npm@latest
+    - npm install -g yarn eslint prettier
 shell:
-  init-hook:
+  startup:
     - echo "JavaScript development environment initialized"
     - node --version
     - npm --version

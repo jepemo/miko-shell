@@ -1,13 +1,14 @@
 # Example configuration for a Python project
 name: python-project
-container-provider: docker
-image: python:3.9-slim
-pre-install:
-  - apt-get update && apt-get install -y git curl
-  - pip install --upgrade pip
-  - pip install pytest flask requests
+container:
+  provider: docker
+  image: python:3.9-slim
+  setup:
+    - apt-get update && apt-get install -y git curl
+    - pip install --upgrade pip
+    - pip install pytest flask requests
 shell:
-  init-hook:
+  startup:
     - echo "Python development environment initialized"
     - python --version
   scripts:

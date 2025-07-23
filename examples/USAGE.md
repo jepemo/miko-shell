@@ -5,7 +5,7 @@
 ### Using Default Configuration
 
 ```bash
-# Create a new dev-config.yaml file
+# Create a new miko-shell.yaml file
 ./miko-shell init
 
 # Build the container image
@@ -22,21 +22,21 @@
 
 ```bash
 # Build with a specific configuration file
-./miko-shell build -c examples/dev-config-python.example.yaml
+./miko-shell build -c examples/miko-shell-python.example.yaml
 
 # Run commands with custom configuration
-./miko-shell run -c examples/dev-config-nextjs.example.yaml npm install
-./miko-shell run -c examples/dev-config-go.example.yaml go build
+./miko-shell run -c examples/miko-shell-nextjs.example.yaml npm install
+./miko-shell run -c examples/miko-shell-go.example.yaml go build
 
 # Open shell with custom configuration
-./miko-shell shell -c examples/dev-config-django.example.yaml
+./miko-shell shell -c examples/miko-shell-django.example.yaml
 ```
 
 ## 📋 Available Commands
 
 ### Core Commands
 
-- `init` - Initialize a new project with dev-config.yaml
+- `init` - Initialize a new project with miko-shell.yaml
 - `build` - Build container image from configuration
 - `run` - Run commands inside the container (run without args to see available scripts)
 - `shell` - Open interactive shell session
@@ -48,7 +48,7 @@
 ./miko-shell run
 
 # List scripts from specific configuration file
-./miko-shell run -c examples/dev-config-python.example.yaml
+./miko-shell run -c examples/miko-shell-python.example.yaml
 ```
 
 ### Common Usage Patterns
@@ -57,50 +57,50 @@
 
 ```bash
 # Use Python example configuration
-./miko-shell build -c examples/dev-config-python.example.yaml
-./miko-shell run -c examples/dev-config-python.example.yaml test
-./miko-shell run -c examples/dev-config-python.example.yaml install
+./miko-shell build -c examples/miko-shell-python.example.yaml
+./miko-shell run -c examples/miko-shell-python.example.yaml test
+./miko-shell run -c examples/miko-shell-python.example.yaml install
 ```
 
 #### JavaScript/Node.js Development
 
 ```bash
 # Use JavaScript example configuration
-./miko-shell build -c examples/dev-config-javascript.example.yaml
-./miko-shell run -c examples/dev-config-javascript.example.yaml npm install
-./miko-shell run -c examples/dev-config-javascript.example.yaml test
+./miko-shell build -c examples/miko-shell-javascript.example.yaml
+./miko-shell run -c examples/miko-shell-javascript.example.yaml npm install
+./miko-shell run -c examples/miko-shell-javascript.example.yaml test
 ```
 
 #### Go Development
 
 ```bash
 # Use Go example configuration
-./miko-shell build -c examples/dev-config-go.example.yaml
-./miko-shell run -c examples/dev-config-go.example.yaml build
-./miko-shell run -c examples/dev-config-go.example.yaml test
+./miko-shell build -c examples/miko-shell-go.example.yaml
+./miko-shell run -c examples/miko-shell-go.example.yaml build
+./miko-shell run -c examples/miko-shell-go.example.yaml test
 ```
 
 #### Framework-Specific Examples
 
 ```bash
 # Django development
-./miko-shell build -c examples/dev-config-django.example.yaml
-./miko-shell run -c examples/dev-config-django.example.yaml runserver
+./miko-shell build -c examples/miko-shell-django.example.yaml
+./miko-shell run -c examples/miko-shell-django.example.yaml runserver
 
 # Next.js development
-./miko-shell build -c examples/dev-config-nextjs.example.yaml
-./miko-shell run -c examples/dev-config-nextjs.example.yaml dev
+./miko-shell build -c examples/miko-shell-nextjs.example.yaml
+./miko-shell run -c examples/miko-shell-nextjs.example.yaml dev
 
 # Spring Boot development
-./miko-shell build -c examples/dev-config-spring-boot.example.yaml
-./miko-shell run -c examples/dev-config-spring-boot.example.yaml bootrun
+./miko-shell build -c examples/miko-shell-spring-boot.example.yaml
+./miko-shell run -c examples/miko-shell-spring-boot.example.yaml bootrun
 ```
 
 ## 🔧 Configuration Options
 
 ### Command Line Flags
 
-- `-c, --config` - Path to configuration file (default: dev-config.yaml)
+- `-c, --config` - Path to configuration file (default: miko-shell.yaml)
 - `-h, --help` - Show help information
 
 ### Environment Variables
@@ -125,16 +125,15 @@ All configuration files follow the same YAML structure:
 
 ```yaml
 name: "project-name"
-container-provider: "docker" # or "podman"
-image:
-  base: "base-image:tag"
-  packages:
-    - "package1"
-    - "package2"
+container:
+  provider: "docker" # or "podman"
+  image: "base-image:tag"
   setup:
     - "setup command 1"
     - "setup command 2"
 shell:
+  startup:
+    - "startup command"
   scripts:
     - name: "script-name"
       description: "What this script does (optional)"
@@ -159,7 +158,7 @@ shell:
 
    ```bash
    # Check if file exists
-   ls -la examples/dev-config-python.example.yaml
+   ls -la examples/miko-shell-python.example.yaml
 
    # Use absolute path if needed
    ./miko-shell build -c /full/path/to/config.yaml
@@ -172,7 +171,7 @@ shell:
    docker info
 
    # Or use Podman
-   ./miko-shell build -c examples/dev-config-python.example.yaml
+   ./miko-shell build -c examples/miko-shell-python.example.yaml
    ```
 
 3. **Permission errors**

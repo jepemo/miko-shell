@@ -33,6 +33,6 @@ var shellCmd = &cobra.Command{
 }
 
 func init() {
-	shellCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: dev-config.yaml)")
+	shellCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
 	rootCmd.AddCommand(shellCmd)
 }

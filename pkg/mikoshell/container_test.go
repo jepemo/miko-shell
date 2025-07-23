@@ -102,8 +102,10 @@ func TestDockerProvider_BuildImage(t *testing.T) {
 	
 	// Create a test config
 	config := &Config{
-		Image: "alpine:latest",
-		PreInstall: []string{"apk add --no-cache curl"},
+		Container: Container{
+			Image: "alpine:latest",
+			Setup: []string{"apk add --no-cache curl"},
+		},
 		Shell: Shell{
 			InitHook: []string{"echo 'test'"},
 		},
@@ -124,7 +126,9 @@ func TestDockerProvider_RunCommand(t *testing.T) {
 	
 	// Create a test config
 	config := &Config{
-		Image: "alpine:latest",
+		Container: Container{
+			Image: "alpine:latest",
+		},
 	}
 	
 	// Test running a command (this won't actually run unless docker is available)
@@ -171,8 +175,10 @@ func TestPodmanProvider_BuildImage(t *testing.T) {
 	
 	// Create a test config
 	config := &Config{
-		Image: "alpine:latest",
-		PreInstall: []string{"apk add --no-cache curl"},
+		Container: Container{
+			Image: "alpine:latest",
+			Setup: []string{"apk add --no-cache curl"},
+		},
 		Shell: Shell{
 			InitHook: []string{"echo 'test'"},
 		},
@@ -193,7 +199,9 @@ func TestPodmanProvider_RunCommand(t *testing.T) {
 	
 	// Create a test config
 	config := &Config{
-		Image: "alpine:latest",
+		Container: Container{
+			Image: "alpine:latest",
+		},
 	}
 	
 	// Test running a command (this won't actually run unless podman is available)

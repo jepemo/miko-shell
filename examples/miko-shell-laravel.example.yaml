@@ -1,14 +1,15 @@
 # Example configuration for a Laravel project
 name: laravel-project
-container-provider: docker
-image: php:8.2-cli-alpine
-pre-install:
-  - apk add --no-cache git curl bash zip unzip nodejs npm
-  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-  - docker-php-ext-install pdo pdo_mysql bcmath
-  - composer global require laravel/installer
+container:
+  provider: docker
+  image: php:8.2-cli-alpine
+  setup:
+    - apk add --no-cache git curl bash zip unzip nodejs npm
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - docker-php-ext-install pdo pdo_mysql bcmath
+    - composer global require laravel/installer
 shell:
-  init-hook:
+  startup:
     - echo "Laravel development environment initialized"
     - php --version
     - composer --version

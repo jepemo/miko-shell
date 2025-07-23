@@ -26,13 +26,13 @@ echo "4. Running predefined script..."
 echo
 echo "5. Testing with different container providers..."
 # Create a podman config
-cat > dev-config-podman.yaml << 'EOF'
-container-provider: podman
+cat > miko-shell-podman.yaml << 'EOF'
+provider: podman
 image: alpine:latest
-pre-install:
+bootstrap:
   - apk add curl
 shell:
-  init-hook:
+  shell-init:
     - echo "Using Podman!"
   scripts:
     - name: test-curl
@@ -43,7 +43,7 @@ EOF
 echo "   - Created podman configuration"
 
 # You can test with podman if available:
-# cp dev-config-podman.yaml dev-config.yaml
+# cp miko-shell-podman.yaml miko-shell.yaml
 # ./miko-shell run test-curl
 
 echo

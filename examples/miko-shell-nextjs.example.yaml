@@ -1,13 +1,14 @@
 # Example configuration for a Next.js project
 name: nextjs-project
-container-provider: docker
-image: node:18-alpine
-pre-install:
-  - apk add --no-cache git curl bash
-  - npm install -g npm@latest
-  - npm install -g create-next-app
+container:
+  provider: docker
+  image: node:18-alpine
+  setup:
+    - apk add --no-cache git curl bash
+    - npm install -g npm@latest
+    - npm install -g create-next-app
 shell:
-  init-hook:
+  startup:
     - echo "Next.js development environment initialized"
     - node --version
     - npm --version

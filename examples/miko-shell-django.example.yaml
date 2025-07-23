@@ -1,13 +1,14 @@
 # Example configuration for a Django project
 name: django-project
-container-provider: docker
-image: python:3.11-slim
-pre-install:
-  - apt-get update && apt-get install -y git curl build-essential libpq-dev
-  - pip install --upgrade pip
-  - pip install django djangorestframework celery redis psycopg2-binary
+container:
+  provider: docker
+  image: python:3.11-slim
+  setup:
+    - apt-get update && apt-get install -y git curl build-essential libpq-dev
+    - pip install --upgrade pip
+    - pip install django djangorestframework celery redis psycopg2-binary
 shell:
-  init-hook:
+  startup:
     - echo "Django development environment initialized"
     - python --version
     - django-admin --version

@@ -37,13 +37,13 @@ func (c *Client) LoadConfig() error {
 	c.configFile = ConfigFileName
 
 	// Initialize the container provider
-	provider, err := NewContainerProvider(cfg.ContainerProvider)
+	provider, err := NewContainerProvider(cfg.Container.Provider)
 	if err != nil {
 		return fmt.Errorf("failed to create container provider: %w", err)
 	}
 
 	if !provider.IsAvailable() {
-		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.ContainerProvider, cfg.ContainerProvider)
+		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
 	}
 
 	c.provider = provider
@@ -61,59 +61,44 @@ func (c *Client) LoadConfigFromFile(filePath string) error {
 	c.configFile = filePath
 
 	// Initialize the container provider
-	provider, err := NewContainerProvider(cfg.ContainerProvider)
+	provider, err := NewContainerProvider(cfg.Container.Provider)
 	if err != nil {
 		return fmt.Errorf("failed to create container provider: %w", err)
 	}
 
 	if !provider.IsAvailable() {
-		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.ContainerProvider, cfg.ContainerProvider)
+		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
 	}
 
 	c.provider = provider
 	return nil
 }
 
-// InitProject creates a new dev-config.yaml file
-func (c *Client) InitProject() error {
+// InitProject creates a new miko-shell.yaml file
+func (c *Client) InitProject(useDockerfile bool) error {
 	if ConfigExists() {
-		return fmt.Errorf("dev-config.yaml already exists in current directory")
+		return fmt.Errorf("miko-shell.yaml already exists in current directory")
 	}
 
 	// Get the normalized directory name
 	projectName := GetCurrentDirName()
 
-	defaultConfig := `name: ` + projectName + `
-container-provider: docker
-image: alpine:latest
-pre-install:
-  - apk add --no-cache curl git
-shell:
-  init-hook:
-    - echo "Welcome to your development environment!"
-    - echo "Project ` + projectName + `"
-    - pwd
-  scripts:
-    - name: hello
-      description: "Say hello and show system info"
-      commands: |
-        echo "Hello from miko-shell!"
-        uname -a
-        df -h /
-    - name: test
-      description: "Run a simple test"
-      commands:
-        - echo "Running tests..."
-        - echo "All tests passed!"
-    - name: build
-      description: "Build the project"
-      commands:
-        - echo "Building project..."
-        - echo "Build completed successfully!"
-`
+	var defaultConfig string
+	if useDockerfile {
+		defaultConfig = c.generateDockerfileConfig(projectName)
+	} else {
+		defaultConfig = c.generateImageConfig(projectName)
+	}
 
 	if err := os.WriteFile(ConfigFileName, []byte(defaultConfig), 0644); err != nil {
 		return fmt.Errorf("failed to create config file: %w", err)
+	}
+
+	// Create Dockerfile if using --dockerfile option
+	if useDockerfile {
+		if err := c.createSampleDockerfile(); err != nil {
+			return fmt.Errorf("failed to create Dockerfile: %w", err)
+		}
 	}
 
 	return nil
@@ -261,4 +246,91 @@ func (c *Client) ensureImageExists() (string, error) {
 	}
 
 	return tag, nil
+}
+
+// generateImageConfig generates configuration using pre-built image
+func (c *Client) generateImageConfig(projectName string) string {
+	return `name: ` + projectName + `
+container:
+  provider: docker
+  image: alpine:latest
+  setup:
+    - apk add --no-cache curl git
+shell:
+  startup:
+    - echo "Welcome to your development environment!"
+    - echo "Project ` + projectName + `"
+    - pwd
+  scripts:
+    - name: hello
+      description: "Say hello and show system info"
+      commands: |
+        echo "Hello from miko-shell!"
+        uname -a
+        df -h /
+    - name: test
+      description: "Run a simple test"
+      commands:
+        - echo "Running tests..."
+        - echo "All tests passed!"
+    - name: build
+      description: "Build the project"
+      commands:
+        - echo "Building project..."
+        - echo "Build completed successfully!"
+`
+}
+
+// generateDockerfileConfig generates configuration using custom Dockerfile
+func (c *Client) generateDockerfileConfig(projectName string) string {
+	return `name: ` + projectName + `
+container:
+  provider: docker
+  build:
+    dockerfile: ./Dockerfile
+    context: .
+    args:
+      VERSION: "1.0"
+shell:
+  startup:
+    - echo "Welcome to your custom development environment!"
+    - echo "Project ` + projectName + `"
+    - pwd
+  scripts:
+    - name: hello
+      description: "Say hello and show system info"
+      commands: |
+        echo "Hello from miko-shell!"
+        uname -a
+        df -h /
+    - name: example
+      description: "Example custom command"
+      commands:
+        - echo "This is a custom environment built from Dockerfile"
+    - name: build
+      description: "Build the project"
+      commands:
+        - echo "Building project..."
+        - echo "Build completed successfully!"
+`
+}
+
+// createSampleDockerfile creates a sample Dockerfile
+func (c *Client) createSampleDockerfile() error {
+	dockerfileContent := `FROM alpine:latest
+
+# Install basic tools
+RUN apk add --no-cache curl git
+
+# Set working directory
+WORKDIR /workspace
+
+# Add sample setup
+RUN echo "Custom Dockerfile setup completed"
+
+# Default command
+CMD ["sh"]
+`
+
+	return os.WriteFile("Dockerfile", []byte(dockerfileContent), 0644)
 }

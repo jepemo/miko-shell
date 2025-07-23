@@ -41,6 +41,13 @@ func (d *DockerProvider) IsAvailable() bool {
 }
 
 func (d *DockerProvider) BuildImage(cfg *Config, tag string) error {
+	// First, build custom image if needed
+	if cfg.Container.Build != nil {
+		if err := d.buildCustomImage(cfg); err != nil {
+			return fmt.Errorf("failed to build custom image: %w", err)
+		}
+	}
+	
 	return d.buildImage(cfg, tag)
 }
 
@@ -55,6 +62,32 @@ func (d *DockerProvider) RunShell(cfg *Config, tag string) error {
 func (d *DockerProvider) ImageExists(tag string) bool {
 	cmd := exec.Command("docker", "image", "inspect", tag)
 	return cmd.Run() == nil
+}
+
+func (d *DockerProvider) buildCustomImage(cfg *Config) error {
+	build := cfg.Container.Build
+	customTag := cfg.Name + ":custom"
+	
+	// Check if custom image already exists
+	if d.ImageExists(customTag) {
+		return nil
+	}
+	
+	args := []string{"build", "-t", customTag, "-f", build.Dockerfile}
+	
+	// Add build args if specified
+	for key, value := range build.Args {
+		args = append(args, "--build-arg", fmt.Sprintf("%s=%s", key, value))
+	}
+	
+	// Add context path
+	args = append(args, build.Context)
+	
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	return cmd.Run()
 }
 
 func (d *DockerProvider) buildImage(cfg *Config, tag string) error {
@@ -94,11 +127,19 @@ func (d *DockerProvider) runContainer(cfg *Config, tag string, command []string,
 func (d *DockerProvider) generateDockerfile(cfg *Config) string {
 	var dockerfile strings.Builder
 	
-	dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Image))
+	// Handle custom build or base image
+	if cfg.Container.Build != nil {
+		// For custom builds, we'll build the custom image first
+		// This function generates a runtime Dockerfile that uses the custom image
+		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Name+":custom"))
+	} else {
+		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Container.Image))
+	}
+	
 	dockerfile.WriteString("WORKDIR /workspace\n")
 	
-	// Add pre-install commands
-	for _, cmd := range cfg.PreInstall {
+	// Add setup commands
+	for _, cmd := range cfg.Container.Setup {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
 	}
 	
@@ -121,6 +162,13 @@ func (p *PodmanProvider) IsAvailable() bool {
 }
 
 func (p *PodmanProvider) BuildImage(cfg *Config, tag string) error {
+	// First, build custom image if needed
+	if cfg.Container.Build != nil {
+		if err := p.buildCustomImage(cfg); err != nil {
+			return fmt.Errorf("failed to build custom image: %w", err)
+		}
+	}
+	
 	return p.buildImage(cfg, tag)
 }
 
@@ -135,6 +183,32 @@ func (p *PodmanProvider) RunShell(cfg *Config, tag string) error {
 func (p *PodmanProvider) ImageExists(tag string) bool {
 	cmd := exec.Command("podman", "image", "inspect", tag)
 	return cmd.Run() == nil
+}
+
+func (p *PodmanProvider) buildCustomImage(cfg *Config) error {
+	build := cfg.Container.Build
+	customTag := cfg.Name + ":custom"
+	
+	// Check if custom image already exists
+	if p.ImageExists(customTag) {
+		return nil
+	}
+	
+	args := []string{"build", "-t", customTag, "-f", build.Dockerfile}
+	
+	// Add build args if specified
+	for key, value := range build.Args {
+		args = append(args, "--build-arg", fmt.Sprintf("%s=%s", key, value))
+	}
+	
+	// Add context path
+	args = append(args, build.Context)
+	
+	cmd := exec.Command("podman", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	return cmd.Run()
 }
 
 func (p *PodmanProvider) buildImage(cfg *Config, tag string) error {
@@ -174,11 +248,17 @@ func (p *PodmanProvider) runContainer(cfg *Config, tag string, command []string,
 func (p *PodmanProvider) generateDockerfile(cfg *Config) string {
 	var dockerfile strings.Builder
 	
-	dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Image))
+	// Handle custom build or base image
+	if cfg.Container.Build != nil {
+		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Name+":custom"))
+	} else {
+		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Container.Image))
+	}
+	
 	dockerfile.WriteString("WORKDIR /workspace\n")
 	
-	// Add pre-install commands
-	for _, cmd := range cfg.PreInstall {
+	// Add setup commands
+	for _, cmd := range cfg.Container.Setup {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
 	}
 	

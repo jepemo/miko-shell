@@ -1,11 +1,12 @@
 # Example configuration for a Java project (Maven)
 name: java-project
-container-provider: docker
-image: openjdk:17-jdk-alpine
-pre-install:
-  - apk add --no-cache git curl bash maven
+container:
+  provider: docker
+  image: openjdk:17-jdk-alpine
+  setup:
+    - apk add --no-cache git curl bash maven
 shell:
-  init-hook:
+  startup:
     - echo "Java development environment initialized"
     - java -version
     - mvn --version
