@@ -2,7 +2,7 @@ package mikoshell
 
 import (
 	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestNewClient(t *testing.T) {
 	}
 
 	if client == nil {
-		t.Error("NewClient() should return a non-nil client")
+		t.Fatal("NewClient() should return a non-nil client")
 	}
 
 	if client.workingDir == "" {
@@ -37,7 +37,11 @@ func TestClient_InitProject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "test-init-project")
@@ -139,7 +143,11 @@ func TestClient_LoadConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "test-load-config")
@@ -227,7 +235,11 @@ func TestClient_GetImageTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "test-image-tag")
@@ -279,7 +291,7 @@ container:
 		}
 
 		// Tag should start with project name
-		if !filepath.HasPrefix(tag, "test-project:") {
+		if !strings.HasPrefix(tag, "test-project:") {
 			t.Errorf("Expected tag to start with 'test-project:', got '%s'", tag)
 		}
 	})
@@ -301,13 +313,13 @@ func TestClient_GetConfig(t *testing.T) {
 		Name: "test",
 		Container: Container{
 			Provider: "docker",
-			Image:   "alpine:latest",
+			Image:    "alpine:latest",
 		},
 	}
 
 	config := client.GetConfig()
 	if config == nil {
-		t.Error("GetConfig() should return config when one is set")
+		t.Fatal("GetConfig() should return config when one is set")
 	}
 
 	if config.Name != "test" {

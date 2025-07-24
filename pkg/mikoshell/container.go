@@ -47,7 +47,7 @@ func (d *DockerProvider) BuildImage(cfg *Config, tag string) error {
 			return fmt.Errorf("failed to build custom image: %w", err)
 		}
 	}
-	
+
 	return d.buildImage(cfg, tag)
 }
 
@@ -67,73 +67,73 @@ func (d *DockerProvider) ImageExists(tag string) bool {
 func (d *DockerProvider) buildCustomImage(cfg *Config) error {
 	build := cfg.Container.Build
 	customTag := cfg.Name + ":custom"
-	
+
 	// Check if custom image already exists
 	if d.ImageExists(customTag) {
 		return nil
 	}
-	
+
 	args := []string{"build", "-t", customTag, "-f", build.Dockerfile}
-	
+
 	// Add build args if specified
 	for key, value := range build.Args {
 		args = append(args, "--build-arg", fmt.Sprintf("%s=%s", key, value))
 	}
-	
+
 	// Add context path
 	args = append(args, build.Context)
-	
+
 	cmd := exec.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }
 
 func (d *DockerProvider) buildImage(cfg *Config, tag string) error {
 	dockerfile := d.generateDockerfile(cfg)
-	
+
 	cmd := exec.Command("docker", "build", "-t", tag, "-f", "-", ".")
 	cmd.Stdin = strings.NewReader(dockerfile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }
 
 func (d *DockerProvider) runContainer(cfg *Config, tag string, command []string, interactive bool) error {
 	args := []string{"run", "--rm"}
-	
+
 	if interactive {
 		args = append(args, "-it")
 	}
-	
+
 	// Add host platform environment variables
 	hostOS, hostArch, err := detectHostPlatform()
 	if err == nil {
 		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_OS=%s", hostOS))
 		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_ARCH=%s", hostArch))
 	}
-	
+
 	// Mount current directory
 	workingDir, _ := os.Getwd()
 	args = append(args, "-v", fmt.Sprintf("%s:/workspace", workingDir))
 	args = append(args, "-w", "/workspace")
-	
+
 	args = append(args, tag)
 	args = append(args, command...)
-	
+
 	cmd := exec.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	
+
 	return cmd.Run()
 }
 
 func (d *DockerProvider) generateDockerfile(cfg *Config) string {
 	var dockerfile strings.Builder
-	
+
 	// Handle custom build or base image
 	if cfg.Container.Build != nil {
 		// For custom builds, we'll build the custom image first
@@ -142,23 +142,23 @@ func (d *DockerProvider) generateDockerfile(cfg *Config) string {
 	} else {
 		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Container.Image))
 	}
-	
+
 	dockerfile.WriteString("WORKDIR /workspace\n")
-	
+
 	// Add setup commands
 	for _, cmd := range cfg.Container.Setup {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
 	}
-	
+
 	// Add init hook commands
 	if len(cfg.Shell.InitHook) > 0 {
 		dockerfile.WriteString("RUN ")
 		dockerfile.WriteString(strings.Join(cfg.Shell.InitHook, " && "))
 		dockerfile.WriteString("\n")
 	}
-	
+
 	dockerfile.WriteString("CMD [\"/bin/sh\"]\n")
-	
+
 	return dockerfile.String()
 }
 
@@ -175,7 +175,7 @@ func (p *PodmanProvider) BuildImage(cfg *Config, tag string) error {
 			return fmt.Errorf("failed to build custom image: %w", err)
 		}
 	}
-	
+
 	return p.buildImage(cfg, tag)
 }
 
@@ -195,95 +195,95 @@ func (p *PodmanProvider) ImageExists(tag string) bool {
 func (p *PodmanProvider) buildCustomImage(cfg *Config) error {
 	build := cfg.Container.Build
 	customTag := cfg.Name + ":custom"
-	
+
 	// Check if custom image already exists
 	if p.ImageExists(customTag) {
 		return nil
 	}
-	
+
 	args := []string{"build", "-t", customTag, "-f", build.Dockerfile}
-	
+
 	// Add build args if specified
 	for key, value := range build.Args {
 		args = append(args, "--build-arg", fmt.Sprintf("%s=%s", key, value))
 	}
-	
+
 	// Add context path
 	args = append(args, build.Context)
-	
+
 	cmd := exec.Command("podman", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }
 
 func (p *PodmanProvider) buildImage(cfg *Config, tag string) error {
 	dockerfile := p.generateDockerfile(cfg)
-	
+
 	cmd := exec.Command("podman", "build", "-t", tag, "-f", "-", ".")
 	cmd.Stdin = strings.NewReader(dockerfile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }
 
 func (p *PodmanProvider) runContainer(cfg *Config, tag string, command []string, interactive bool) error {
 	args := []string{"run", "--rm"}
-	
+
 	if interactive {
 		args = append(args, "-it")
 	}
-	
+
 	// Add host platform environment variables
 	hostOS, hostArch, err := detectHostPlatform()
 	if err == nil {
 		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_OS=%s", hostOS))
 		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_ARCH=%s", hostArch))
 	}
-	
+
 	// Mount current directory
 	workingDir, _ := os.Getwd()
 	args = append(args, "-v", fmt.Sprintf("%s:/workspace", workingDir))
 	args = append(args, "-w", "/workspace")
-	
+
 	args = append(args, tag)
 	args = append(args, command...)
-	
+
 	cmd := exec.Command("podman", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	
+
 	return cmd.Run()
 }
 
 func (p *PodmanProvider) generateDockerfile(cfg *Config) string {
 	var dockerfile strings.Builder
-	
+
 	// Handle custom build or base image
 	if cfg.Container.Build != nil {
 		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Name+":custom"))
 	} else {
 		dockerfile.WriteString(fmt.Sprintf("FROM %s\n", cfg.Container.Image))
 	}
-	
+
 	dockerfile.WriteString("WORKDIR /workspace\n")
-	
+
 	// Add setup commands
 	for _, cmd := range cfg.Container.Setup {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
 	}
-	
+
 	// Add init hook commands
 	if len(cfg.Shell.InitHook) > 0 {
 		dockerfile.WriteString("RUN ")
 		dockerfile.WriteString(strings.Join(cfg.Shell.InitHook, " && "))
 		dockerfile.WriteString("\n")
 	}
-	
+
 	dockerfile.WriteString("CMD [\"/bin/sh\"]\n")
-	
+
 	return dockerfile.String()
 }

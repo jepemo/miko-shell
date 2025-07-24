@@ -2,16 +2,44 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/jepemo/miko-shell/pkg/mikoshell"
+	"github.com/spf13/cobra"
 )
+
+// isInfrastructureError checks if an error is related to infrastructure
+// (docker/podman not available, config issues, etc.) vs script execution errors
+func isInfrastructureError(err error) bool {
+	errMsg := err.Error()
+
+	// Infrastructure error patterns
+	infrastructurePatterns := []string{
+		"failed to create client",
+		"failed to load config",
+		"configuration not loaded",
+		"no command specified",
+		"failed to build image",
+		"docker: not found",
+		"podman: not found",
+		"container provider",
+		"failed to calculate config hash",
+	}
+
+	for _, pattern := range infrastructurePatterns {
+		if strings.Contains(errMsg, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
 
 var runCmd = &cobra.Command{
 	Use:   "run [command...]",
 	Short: "Run a command inside the container",
 	Long:  `Runs a command inside the container. If the command matches a script name, it will run that script.`,
-	Args:  cobra.MinimumNArgs(0),
+	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := mikoshell.NewClient()
 		if err != nil {
@@ -34,7 +62,20 @@ var runCmd = &cobra.Command{
 			return client.ListScripts()
 		}
 
-		return client.RunCommand(args)
+		// Run command and handle exit codes properly
+		err = client.RunCommand(args)
+		if err != nil {
+			// Check if this is an infrastructure error or a script execution error
+			if isInfrastructureError(err) {
+				return err // This will show help for infrastructure errors
+			}
+			// For script execution errors, just exit with the error code
+			// without showing help
+			cmd.SilenceUsage = true
+			return err
+		}
+
+		return nil
 	},
 }
 

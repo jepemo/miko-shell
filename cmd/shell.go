@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/jepemo/miko-shell/pkg/mikoshell"
+	"github.com/spf13/cobra"
 )
 
 var shellCmd = &cobra.Command{

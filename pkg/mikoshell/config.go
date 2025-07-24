@@ -28,10 +28,10 @@ type Config struct {
 
 // Container represents the container configuration
 type Container struct {
-	Provider string            `yaml:"provider"`
-	Image    string            `yaml:"image,omitempty"`
-	Build    *ContainerBuild   `yaml:"build,omitempty"`
-	Setup    []string          `yaml:"setup,omitempty"`
+	Provider string          `yaml:"provider"`
+	Image    string          `yaml:"image,omitempty"`
+	Build    *ContainerBuild `yaml:"build,omitempty"`
+	Setup    []string        `yaml:"setup,omitempty"`
 }
 
 // ContainerBuild represents custom image build configuration

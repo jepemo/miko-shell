@@ -30,6 +30,7 @@ shell:
         - go mod tidy
         - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
         - GOOS=$MIKO_HOST_OS GOARCH=$MIKO_HOST_ARCH go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o miko-shell-host .
+        - cp -f miko-shell-host miko-shell
         - echo "==> Built miko-shell-host for $MIKO_HOST_OS/$MIKO_HOST_ARCH successfully!"
 
     - name: build-linux
@@ -84,6 +85,7 @@ shell:
       description: "Run linters"
       commands:
         - echo "Running linters..."
+        - echo "==> Using default golangci-lint configuration..."
         - golangci-lint run
         - echo "Linters completed!"
 

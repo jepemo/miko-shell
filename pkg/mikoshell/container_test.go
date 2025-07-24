@@ -70,11 +70,11 @@ func TestNewContainerProvider(t *testing.T) {
 
 func TestDockerProvider_IsAvailable(t *testing.T) {
 	provider := &DockerProvider{}
-	
+
 	// Note: This test depends on docker being available in the system
 	// For a real test environment, you might want to mock this
 	available := provider.IsAvailable()
-	
+
 	// We can't assume docker is always available, so we just check that the method doesn't panic
 	if available {
 		t.Log("Docker is available")
@@ -85,10 +85,10 @@ func TestDockerProvider_IsAvailable(t *testing.T) {
 
 func TestDockerProvider_ImageExists(t *testing.T) {
 	provider := &DockerProvider{}
-	
+
 	// Test with a tag that likely doesn't exist
 	exists := provider.ImageExists("nonexistent-image:latest")
-	
+
 	// We don't expect this image to exist
 	if exists {
 		t.Log("Image exists (unexpected)")
@@ -99,7 +99,7 @@ func TestDockerProvider_ImageExists(t *testing.T) {
 
 func TestDockerProvider_BuildImage(t *testing.T) {
 	provider := &DockerProvider{}
-	
+
 	// Create a test config
 	config := &Config{
 		Container: Container{
@@ -110,10 +110,10 @@ func TestDockerProvider_BuildImage(t *testing.T) {
 			InitHook: []string{"echo 'test'"},
 		},
 	}
-	
+
 	// Test building image (this won't actually build unless docker is available)
 	err := provider.BuildImage(config, "test-image:latest")
-	
+
 	if err != nil {
 		t.Logf("Build failed (expected if docker not available): %v", err)
 	} else {
@@ -123,17 +123,17 @@ func TestDockerProvider_BuildImage(t *testing.T) {
 
 func TestDockerProvider_RunCommand(t *testing.T) {
 	provider := &DockerProvider{}
-	
+
 	// Create a test config
 	config := &Config{
 		Container: Container{
 			Image: "alpine:latest",
 		},
 	}
-	
+
 	// Test running a command (this won't actually run unless docker is available)
 	err := provider.RunCommand(config, "test-image:latest", []string{"echo", "test"})
-	
+
 	if err != nil {
 		t.Logf("Command failed (expected if docker not available): %v", err)
 	} else {
@@ -143,11 +143,11 @@ func TestDockerProvider_RunCommand(t *testing.T) {
 
 func TestPodmanProvider_IsAvailable(t *testing.T) {
 	provider := &PodmanProvider{}
-	
+
 	// Note: This test depends on podman being available in the system
 	// For a real test environment, you might want to mock this
 	available := provider.IsAvailable()
-	
+
 	// We can't assume podman is always available, so we just check that the method doesn't panic
 	if available {
 		t.Log("Podman is available")
@@ -158,10 +158,10 @@ func TestPodmanProvider_IsAvailable(t *testing.T) {
 
 func TestPodmanProvider_ImageExists(t *testing.T) {
 	provider := &PodmanProvider{}
-	
+
 	// Test with a tag that likely doesn't exist
 	exists := provider.ImageExists("nonexistent-image:latest")
-	
+
 	// We don't expect this image to exist
 	if exists {
 		t.Log("Image exists (unexpected)")
@@ -172,7 +172,7 @@ func TestPodmanProvider_ImageExists(t *testing.T) {
 
 func TestPodmanProvider_BuildImage(t *testing.T) {
 	provider := &PodmanProvider{}
-	
+
 	// Create a test config
 	config := &Config{
 		Container: Container{
@@ -183,10 +183,10 @@ func TestPodmanProvider_BuildImage(t *testing.T) {
 			InitHook: []string{"echo 'test'"},
 		},
 	}
-	
+
 	// Test building image (this won't actually build unless podman is available)
 	err := provider.BuildImage(config, "test-image:latest")
-	
+
 	if err != nil {
 		t.Logf("Build failed (expected if podman not available): %v", err)
 	} else {
@@ -196,17 +196,17 @@ func TestPodmanProvider_BuildImage(t *testing.T) {
 
 func TestPodmanProvider_RunCommand(t *testing.T) {
 	provider := &PodmanProvider{}
-	
+
 	// Create a test config
 	config := &Config{
 		Container: Container{
 			Image: "alpine:latest",
 		},
 	}
-	
+
 	// Test running a command (this won't actually run unless podman is available)
 	err := provider.RunCommand(config, "test-image:latest", []string{"echo", "test"})
-	
+
 	if err != nil {
 		t.Logf("Command failed (expected if podman not available): %v", err)
 	} else {

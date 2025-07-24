@@ -75,7 +75,11 @@ func TestGetCurrentDirName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Create temporary directory with specific name
 	tempDir, err := os.MkdirTemp("", "test-project-name")
@@ -116,7 +120,11 @@ func TestConfigExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Change to directory with config file
 	tempDir := filepath.Dir(tempFile.Name())
@@ -142,7 +150,11 @@ func TestLoadConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore original working directory: %v", err)
+		}
+	}()
 
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "test-config")
