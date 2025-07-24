@@ -21,6 +21,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f miko-shell.yaml
 	rm -f Dockerfile.miko-shell
+	rm -rf .bootstrap
 
 # Run tests
 test:

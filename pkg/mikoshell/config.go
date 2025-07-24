@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"unicode"
 
@@ -207,4 +208,35 @@ func GetCurrentDirName() string {
 
 	dirName := filepath.Base(workingDir)
 	return NormalizeName(dirName)
+}
+
+// detectHostPlatform detects the host OS and architecture
+func detectHostPlatform() (string, string, error) {
+	var hostOS, hostArch string
+
+	// Detect OS
+	switch runtime.GOOS {
+	case "linux":
+		hostOS = "linux"
+	case "darwin":
+		hostOS = "darwin"
+	case "windows":
+		hostOS = "windows"
+	default:
+		return "", "", fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+	}
+
+	// Detect architecture
+	switch runtime.GOARCH {
+	case "amd64":
+		hostArch = "amd64"
+	case "arm64":
+		hostArch = "arm64"
+	case "arm":
+		hostArch = "armv6l"
+	default:
+		return "", "", fmt.Errorf("unsupported architecture: %s", runtime.GOARCH)
+	}
+
+	return hostOS, hostArch, nil
 }

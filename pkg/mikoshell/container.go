@@ -108,6 +108,13 @@ func (d *DockerProvider) runContainer(cfg *Config, tag string, command []string,
 		args = append(args, "-it")
 	}
 	
+	// Add host platform environment variables
+	hostOS, hostArch, err := detectHostPlatform()
+	if err == nil {
+		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_OS=%s", hostOS))
+		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_ARCH=%s", hostArch))
+	}
+	
 	// Mount current directory
 	workingDir, _ := os.Getwd()
 	args = append(args, "-v", fmt.Sprintf("%s:/workspace", workingDir))
@@ -227,6 +234,13 @@ func (p *PodmanProvider) runContainer(cfg *Config, tag string, command []string,
 	
 	if interactive {
 		args = append(args, "-it")
+	}
+	
+	// Add host platform environment variables
+	hostOS, hostArch, err := detectHostPlatform()
+	if err == nil {
+		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_OS=%s", hostOS))
+		args = append(args, "-e", fmt.Sprintf("MIKO_HOST_ARCH=%s", hostArch))
 	}
 	
 	// Mount current directory

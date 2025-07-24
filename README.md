@@ -27,6 +27,33 @@ A containerized development environment manager that allows you to work with dif
 - 🔄 **Scripts**: Define custom scripts for common tasks
 - 🛠️ **Flexible**: Support for multiple container providers
 
+## Quick Start
+
+### Option 1: Using Bootstrap Script (Recommended for clean environments)
+
+The bootstrap script automatically downloads Go and builds the project:
+
+```bash
+./bootstrap.sh
+```
+
+This will:
+
+- Download Go 1.23.4 (if not already available with the right version)
+- Download dependencies
+- Build the project
+- Test the binary
+
+### Option 2: Using Go (if you have Go installed)
+
+```bash
+# Build the project
+make build
+
+# Or directly with go
+go build -o miko-shell .
+```
+
 ## Installation
 
 ### Download from Releases

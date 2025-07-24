@@ -1,0 +1,132 @@
+name: miko-shell-dev
+container:
+  provider: docker
+  image: golang:1.23-alpine
+  setup:
+    - apk add --no-cache git make curl wget bash
+    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - go install golang.org/x/tools/cmd/goimports@latest
+shell:
+  startup:
+    - echo "==> miko-shell development environment ready!"
+    - echo "==> Project directory $(pwd)"
+    - echo "==> Host OS $MIKO_HOST_OS"
+    - echo "==> Host Architecture $MIKO_HOST_ARCH"
+    - go version
+  scripts:
+    - name: deps
+      description: "Download and tidy dependencies"
+      commands:
+        - echo "Downloading dependencies..."
+        - go mod download
+        - go mod tidy
+        - echo "Dependencies updated!"
+
+    - name: build
+      description: "Build for host platform using MIKO_HOST_OS and MIKO_HOST_ARCH"
+      commands:
+        - echo "==> Building miko-shell for host platform..."
+        - echo "Target $MIKO_HOST_OS/$MIKO_HOST_ARCH"
+        - go mod tidy
+        - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        - GOOS=$MIKO_HOST_OS GOARCH=$MIKO_HOST_ARCH go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o miko-shell-host .
+        - echo "==> Built miko-shell-host for $MIKO_HOST_OS/$MIKO_HOST_ARCH successfully!"
+
+    - name: build-linux
+      description: "Build for Linux (container platform)"
+      commands:
+        - echo "==> Building miko-shell for Linux..."
+        - go mod tidy
+        - go build -o miko-shell .
+        - echo "==> Built miko-shell for Linux successfully!"
+
+    - name: test
+      description: "Run tests"
+      commands:
+        - echo "Running tests..."
+        - go mod tidy
+        - go test ./...
+
+    - name: clean
+      description: "Clean build artifacts"
+      commands:
+        - echo "Cleaning..."
+        - rm -f miko-shell miko-shell-host
+        - rm -rf build
+        - echo "Cleaned successfully!"
+
+    - name: build-multi
+      description: "Build for multiple platforms"
+      commands:
+        - echo "==> Building for multiple platforms..."
+        - mkdir -p build
+        - go mod tidy
+        - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        - echo "Building for Linux AMD64..."
+        - GOOS=linux GOARCH=amd64 go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o build/miko-shell-linux-amd64 .
+        - echo "Building for macOS Intel..."
+        - GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o build/miko-shell-macos-amd64 .
+        - echo "Building for macOS Apple Silicon..."
+        - GOOS=darwin GOARCH=arm64 go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o build/miko-shell-macos-arm64 .
+        - echo "Building for Windows..."
+        - GOOS=windows GOARCH=amd64 go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o build/miko-shell-windows.exe .
+        - echo "==> All builds completed!"
+        - ls -la build/
+
+    - name: fmt
+      description: "Format code"
+      commands:
+        - echo "Formatting code..."
+        - go fmt ./...
+        - echo "Code formatted!"
+
+    - name: lint
+      description: "Run linters"
+      commands:
+        - echo "Running linters..."
+        - golangci-lint run
+        - echo "Linters completed!"
+
+    - name: version
+      description: "Show version"
+      commands:
+        - go version
+        - ./miko-shell --version || echo "miko-shell not built yet"
+
+    - name: dev
+      description: "Development cycle: deps + build + test"
+      commands:
+        - echo "==> Running development cycle..."
+        - go mod download
+        - go mod tidy
+        - echo "Building for host platform ($MIKO_HOST_OS/$MIKO_HOST_ARCH)..."
+        - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        - GOOS=$MIKO_HOST_OS GOARCH=$MIKO_HOST_ARCH go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o miko-shell-host .
+        - go test ./...
+        - echo "==> Development cycle completed!"
+
+    - name: help
+      description: "Show available scripts"
+      commands:
+        - echo "==> Available miko-shell development commands"
+        - echo ""
+        - echo "==> Build Commands"
+        - echo "  build       - Build for host platform ($MIKO_HOST_OS/$MIKO_HOST_ARCH)"
+        - echo "  build-linux - Build for Linux (container platform)"
+        - echo "  build-multi - Build for multiple platforms"
+        - echo ""
+        - echo "==> Development"
+        - echo "  deps        - Download and tidy dependencies"
+        - echo "  test        - Run tests"
+        - echo "  dev         - Full development cycle"
+        - echo ""
+        - echo "==> Utilities"
+        - echo "  fmt         - Format code"
+        - echo "  lint        - Run linters"
+        - echo "  clean       - Clean build artifacts"
+        - echo "  version     - Show version info"
+        - echo "  help        - Show this help"
+        - echo ""
+        - echo "==> Platform Info"
+        - echo "  Host OS $MIKO_HOST_OS"
+        - echo "  Host Arch $MIKO_HOST_ARCH"
