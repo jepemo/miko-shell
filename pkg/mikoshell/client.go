@@ -36,17 +36,19 @@ func (c *Client) LoadConfig() error {
 	c.config = cfg
 	c.configFile = ConfigFileName
 
-	// Initialize the container provider
-	provider, err := NewContainerProvider(cfg.Container.Provider)
-	if err != nil {
-		return fmt.Errorf("failed to create container provider: %w", err)
-	}
+	// Initialize the container provider only if not already set (for testing)
+	if c.provider == nil {
+		provider, err := NewContainerProvider(cfg.Container.Provider)
+		if err != nil {
+			return fmt.Errorf("failed to create container provider: %w", err)
+		}
 
-	if !provider.IsAvailable() {
-		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
-	}
+		if !provider.IsAvailable() {
+			return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
+		}
 
-	c.provider = provider
+		c.provider = provider
+	}
 	return nil
 }
 
@@ -60,17 +62,19 @@ func (c *Client) LoadConfigFromFile(filePath string) error {
 	c.config = cfg
 	c.configFile = filePath
 
-	// Initialize the container provider
-	provider, err := NewContainerProvider(cfg.Container.Provider)
-	if err != nil {
-		return fmt.Errorf("failed to create container provider: %w", err)
-	}
+	// Initialize the container provider only if not already set (for testing)
+	if c.provider == nil {
+		provider, err := NewContainerProvider(cfg.Container.Provider)
+		if err != nil {
+			return fmt.Errorf("failed to create container provider: %w", err)
+		}
 
-	if !provider.IsAvailable() {
-		return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
-	}
+		if !provider.IsAvailable() {
+			return fmt.Errorf("container provider '%s' is not available. Please install %s first", cfg.Container.Provider, cfg.Container.Provider)
+		}
 
-	c.provider = provider
+		c.provider = provider
+	}
 	return nil
 }
 
@@ -142,8 +146,10 @@ func (c *Client) RunCommand(args []string) error {
 	// Check if the command is a script
 	commandName := args[0]
 	if script, exists := c.config.GetScript(commandName); exists {
-		// Run the script commands
-		command := []string{"/bin/sh", "-c", script.GetCommandsAsString()}
+		// Run the script commands with parameters
+		scriptArgs := args[1:] // Get the remaining arguments
+		commandStr := script.GetCommandsAsStringWithArgs(scriptArgs)
+		command := []string{"/bin/sh", "-c", commandStr}
 		return c.provider.RunCommand(c.config, tag, command)
 	}
 
@@ -181,6 +187,13 @@ func (c *Client) GetImageTag() (string, error) {
 
 // GetCommandsAsString converts Commands field to a shell command string
 func (s *Script) GetCommandsAsString() string {
+	return s.GetCommandsAsStringWithArgs([]string{})
+}
+
+// GetCommandsAsStringWithArgs converts Commands field to a shell command string with arguments
+func (s *Script) GetCommandsAsStringWithArgs(args []string) string {
+	var command string
+	
 	switch v := s.Commands.(type) {
 	case []interface{}:
 		// Handle array of commands
@@ -188,16 +201,32 @@ func (s *Script) GetCommandsAsString() string {
 		for _, cmd := range v {
 			commands = append(commands, fmt.Sprintf("%v", cmd))
 		}
-		return strings.Join(commands, " && ")
+		command = strings.Join(commands, " && ")
 	case string:
 		// Handle single string (multiline block)
-		return v
+		command = v
 	case []string:
 		// Handle array of strings
-		return strings.Join(v, " && ")
+		command = strings.Join(v, " && ")
 	default:
-		return ""
+		command = ""
 	}
+
+	// If there are no arguments, return the command as is
+	if len(args) == 0 {
+		return command
+	}
+
+	// Prepare argument variables for the shell script
+	argSetup := "set -- "
+	for _, arg := range args {
+		// Escape single quotes in arguments
+		escaped := strings.ReplaceAll(arg, "'", "'\"'\"'")
+		argSetup += "'" + escaped + "' "
+	}
+	
+	// Combine argument setup with the actual command
+	return argSetup + "; " + command
 }
 
 // ListScripts displays all available scripts with their descriptions
@@ -333,4 +362,9 @@ CMD ["sh"]
 `
 
 	return os.WriteFile("Dockerfile", []byte(dockerfileContent), 0644)
+}
+
+// SetProvider sets the container provider (useful for testing)
+func (c *Client) SetProvider(provider ContainerProvider) {
+	c.provider = provider
 }

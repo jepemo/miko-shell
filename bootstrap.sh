@@ -137,6 +137,12 @@ main() {
     
     # Change to script directory
     cd "${SCRIPT_DIR}"
+
+    # Delete current binary if it exists
+    if [ -f "./${PROJECT_NAME}" ]; then
+        log_info "Removing existing binary: ./${PROJECT_NAME}"
+        rm -f "./${PROJECT_NAME}"
+    fi
     
     # Check if we need to download Go
     local go_binary=""

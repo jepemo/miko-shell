@@ -6,6 +6,29 @@ import (
 	"testing"
 )
 
+// MockContainerProvider implements ContainerProvider for testing
+type MockContainerProvider struct{}
+
+func (m *MockContainerProvider) IsAvailable() bool {
+	return true // Always available in tests
+}
+
+func (m *MockContainerProvider) BuildImage(cfg *Config, tag string) error {
+	return nil // Mock successful build
+}
+
+func (m *MockContainerProvider) RunCommand(cfg *Config, tag string, command []string) error {
+	return nil // Mock successful command
+}
+
+func (m *MockContainerProvider) RunShell(cfg *Config, tag string) error {
+	return nil // Mock successful shell
+}
+
+func (m *MockContainerProvider) ImageExists(tag string) bool {
+	return true // Always exists in tests
+}
+
 func TestNewClient(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {
@@ -193,6 +216,9 @@ shell:
 			t.Fatalf("Failed to write config file: %v", err)
 		}
 
+		// Set mock provider before loading config
+		client.SetProvider(&MockContainerProvider{})
+
 		err := client.LoadConfig()
 		if err != nil {
 			t.Fatalf("LoadConfig() failed: %v", err)
@@ -275,6 +301,9 @@ container:
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)
 		}
+
+		// Set mock provider before loading config
+		client.SetProvider(&MockContainerProvider{})
 
 		err := client.LoadConfig()
 		if err != nil {
