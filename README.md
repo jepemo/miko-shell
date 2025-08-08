@@ -1,6 +1,8 @@
 # Miko Shell 🐚
 
-_Consistent environments without the clutter_
+_Consistent environments ## 3 – Open a dev shell
+miko-shell open – Open a dev shell
+miko-shell openthout the clutter_
 
 [![CI](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml)
 [![Release](https://github.com/jepemo/miko-shell/actions/workflows/release.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/release.yml)

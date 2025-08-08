@@ -81,12 +81,12 @@ miko-shell run -- command -flags args
 - Flag separator (`--`) support
 - Automatic image building if needed
 
-### `shell` - Interactive Shell
+### `open` - Interactive Shell
 
 Opens an interactive shell session inside the container.
 
 ```bash
-miko-shell shell
+miko-shell open
 ```
 
 ✅ **Status**: Fully implemented with startup commands support.

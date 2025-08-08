@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var shellCmd = &cobra.Command{
-	Use:   "shell",
-	Short: "Access the container shell",
-	Long:  `Opens an interactive shell session inside the container.`,
+var openCmd = &cobra.Command{
+	Use:   "open",
+	Short: "Open an interactive development environment",
+	Long:  `Opens an interactive shell session inside the container environment.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := mikoshell.NewClient()
 		if err != nil {
@@ -33,6 +33,6 @@ var shellCmd = &cobra.Command{
 }
 
 func init() {
-	shellCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
-	rootCmd.AddCommand(shellCmd)
+	openCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
+	rootCmd.AddCommand(openCmd)
 }
