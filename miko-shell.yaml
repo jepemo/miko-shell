@@ -8,11 +8,19 @@ container:
     - go install golang.org/x/tools/cmd/goimports@latest
 shell:
   startup:
+    - |
+      cat <<'EOF'
+             _ _               _       _ _ 
+       _____|_| |_ ___ ___ ___| |_ ___| | |
+      |     | | '_| . |___|_ -|   | -_| | |
+      |_|_|_|_|_,_|___|   |___|_|_|___|_|_|
+
+      EOF
     - echo "==> miko-shell development environment ready!"
-    - echo "==> Project directory $(pwd)"
-    - echo "==> Host OS $MIKO_HOST_OS"
-    - echo "==> Host Architecture $MIKO_HOST_ARCH"
-    - go version
+    - 'echo "==> Project directory: $(pwd)"'
+    - 'echo "==> Host: $MIKO_HOST_OS/$MIKO_HOST_ARCH"'
+    - 'echo "==> Go version: $(go version)"'
+    - export PS1="\[\e[32m\]\u@\h:\w\[\e[0m\]$ "
   scripts:
     - name: deps
       description: "Download and tidy dependencies"

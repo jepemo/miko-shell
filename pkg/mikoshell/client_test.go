@@ -25,6 +25,10 @@ func (m *MockContainerProvider) RunShell(cfg *Config, tag string) error {
 	return nil // Mock successful shell
 }
 
+func (m *MockContainerProvider) RunShellWithStartup(cfg *Config, tag string) error {
+	return nil // Mock successful shell with startup
+}
+
 func (m *MockContainerProvider) ImageExists(tag string) bool {
 	return true // Always exists in tests
 }

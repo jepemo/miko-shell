@@ -13,6 +13,7 @@ type ContainerProvider interface {
 	BuildImage(cfg *Config, tag string) error
 	RunCommand(cfg *Config, tag string, command []string) error
 	RunShell(cfg *Config, tag string) error
+	RunShellWithStartup(cfg *Config, tag string) error
 	ImageExists(tag string) bool
 }
 
@@ -57,6 +58,40 @@ func (d *DockerProvider) RunCommand(cfg *Config, tag string, command []string) e
 
 func (d *DockerProvider) RunShell(cfg *Config, tag string) error {
 	return d.runContainer(cfg, tag, []string{"/bin/sh"}, true)
+}
+
+func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
+	// If no startup commands are defined, just run the shell
+	if len(cfg.Shell.InitHook) == 0 {
+		return d.RunShell(cfg, tag)
+	}
+
+	// Create a startup script that will be written to the container
+	var script strings.Builder
+	script.WriteString("#!/bin/sh\n")
+	script.WriteString("set -e\n") // Exit on any error
+	script.WriteString("\n")
+	
+	// Add startup commands
+	for _, cmd := range cfg.Shell.InitHook {
+		script.WriteString("# Startup command\n")
+		script.WriteString(cmd + "\n")
+		script.WriteString("\n")
+	}
+	
+	// Start interactive shell after startup commands
+	script.WriteString("# Start interactive shell\n")
+	script.WriteString("exec /bin/sh\n")
+
+	// Create the script using a here-document to avoid escaping issues
+	shellCommand := fmt.Sprintf(`cat > /tmp/startup.sh << 'MIKO_SCRIPT_EOF'
+%s
+MIKO_SCRIPT_EOF
+chmod +x /tmp/startup.sh
+exec /tmp/startup.sh`, script.String())
+
+	// Run the script
+	return d.runContainer(cfg, tag, []string{"/bin/sh", "-c", shellCommand}, true)
 }
 
 func (d *DockerProvider) ImageExists(tag string) bool {
@@ -150,13 +185,6 @@ func (d *DockerProvider) generateDockerfile(cfg *Config) string {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
 	}
 
-	// Add init hook commands
-	if len(cfg.Shell.InitHook) > 0 {
-		dockerfile.WriteString("RUN ")
-		dockerfile.WriteString(strings.Join(cfg.Shell.InitHook, " && "))
-		dockerfile.WriteString("\n")
-	}
-
 	dockerfile.WriteString("CMD [\"/bin/sh\"]\n")
 
 	return dockerfile.String()
@@ -185,6 +213,40 @@ func (p *PodmanProvider) RunCommand(cfg *Config, tag string, command []string) e
 
 func (p *PodmanProvider) RunShell(cfg *Config, tag string) error {
 	return p.runContainer(cfg, tag, []string{"/bin/sh"}, true)
+}
+
+func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
+	// If no startup commands are defined, just run the shell
+	if len(cfg.Shell.InitHook) == 0 {
+		return p.RunShell(cfg, tag)
+	}
+
+	// Create a startup script that will be written to the container
+	var script strings.Builder
+	script.WriteString("#!/bin/sh\n")
+	script.WriteString("set -e\n") // Exit on any error
+	script.WriteString("\n")
+	
+	// Add startup commands
+	for _, cmd := range cfg.Shell.InitHook {
+		script.WriteString("# Startup command\n")
+		script.WriteString(cmd + "\n")
+		script.WriteString("\n")
+	}
+	
+	// Start interactive shell after startup commands
+	script.WriteString("# Start interactive shell\n")
+	script.WriteString("exec /bin/sh\n")
+
+	// Create the script using a here-document to avoid escaping issues
+	shellCommand := fmt.Sprintf(`cat > /tmp/startup.sh << 'MIKO_SCRIPT_EOF'
+%s
+MIKO_SCRIPT_EOF
+chmod +x /tmp/startup.sh
+exec /tmp/startup.sh`, script.String())
+
+	// Run the script
+	return p.runContainer(cfg, tag, []string{"/bin/sh", "-c", shellCommand}, true)
 }
 
 func (p *PodmanProvider) ImageExists(tag string) bool {
@@ -274,13 +336,6 @@ func (p *PodmanProvider) generateDockerfile(cfg *Config) string {
 	// Add setup commands
 	for _, cmd := range cfg.Container.Setup {
 		dockerfile.WriteString(fmt.Sprintf("RUN %s\n", cmd))
-	}
-
-	// Add init hook commands
-	if len(cfg.Shell.InitHook) > 0 {
-		dockerfile.WriteString("RUN ")
-		dockerfile.WriteString(strings.Join(cfg.Shell.InitHook, " && "))
-		dockerfile.WriteString("\n")
 	}
 
 	dockerfile.WriteString("CMD [\"/bin/sh\"]\n")

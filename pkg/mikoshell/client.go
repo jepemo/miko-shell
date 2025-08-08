@@ -168,7 +168,7 @@ func (c *Client) OpenShell() error {
 		return err
 	}
 
-	return c.provider.RunShell(c.config, tag)
+	return c.provider.RunShellWithStartup(c.config, tag)
 }
 
 // GetImageTag returns the current image tag
