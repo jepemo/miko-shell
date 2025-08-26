@@ -185,10 +185,10 @@ container:
 shell:
   startup:
     - echo "Hello"
-  scripts:
-    - name: test
-      cmds:
-        - echo "test command"
+	scripts:
+		- name: test
+			commands:
+				- echo "test command"
 `
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)
@@ -251,7 +251,7 @@ func TestConfig_GetScript(t *testing.T) {
 		if script.Name != "test" {
 			t.Errorf("Expected script name 'test', got '%s'", script.Name)
 		}
-		if len(script.Commands.([]string)) != 1 || script.Commands.([]string)[0] != "echo test" {
+	if len(script.Commands) != 1 || script.Commands[0] != "echo test" {
 			t.Errorf("Expected commands ['echo test'], got %v", script.Commands)
 		}
 	})

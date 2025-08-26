@@ -29,17 +29,13 @@ archives:
 checksum:
   name_template: checksums.txt
 
-# To enable signing of checksums with GPG or Cosign, uncomment and configure:
-# signs:
-#   - cmd: gpg
-#     signature: "${artifact}.sig"
-#     args: ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0", "--armor", "--detach-sign", "--output", "${signature}", "${artifact}"]
-#     stdin: '{{ .Env.GPG_PASSPHRASE }}'
-#     artifacts: [checksum]
-#     env:
-#       - GPG_TTY={{ .Env.GPG_TTY }}
-#       - GPG_PRIVATE_KEY={{ .Env.GPG_PRIVATE_KEY }}
-#
+signs:
+  - cmd: gpg
+    signature: "${artifact}.sig"
+    args: ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0", "--armor", "--detach-sign", "--output", "${signature}", "${artifact}"]
+    stdin: '{{ .Env.GPG_PASSPHRASE }}'
+  artifacts: checksum
+
 # Cosign example (keyless via OIDC not shown):
 #   - cmd: cosign
 #     artifacts: [checksum]
