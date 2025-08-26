@@ -49,9 +49,9 @@ type Shell struct {
 
 // Script represents a shell script
 type Script struct {
-	Name        string      `yaml:"name"`
-	Description string      `yaml:"description,omitempty"`
-	Commands    interface{} `yaml:"commands"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description,omitempty"`
+	Commands    []string `yaml:"commands"`
 }
 
 // ConfigExists checks if the configuration file exists in the current directory

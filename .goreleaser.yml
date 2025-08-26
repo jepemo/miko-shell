@@ -1,0 +1,58 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: miko-shell
+    main: ./main.go
+    binary: miko-shell
+    goos: [linux, windows, darwin]
+    goarch: [amd64, arm64]
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/jepemo/miko-shell/cmd.version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: miko-shell
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Windows archives as zip; others default to tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+# To enable signing of checksums with GPG or Cosign, uncomment and configure:
+# signs:
+#   - cmd: gpg
+#     signature: "${artifact}.sig"
+#     args: ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0", "--armor", "--detach-sign", "--output", "${signature}", "${artifact}"]
+#     stdin: '{{ .Env.GPG_PASSPHRASE }}'
+#     artifacts: [checksum]
+#     env:
+#       - GPG_TTY={{ .Env.GPG_TTY }}
+#       - GPG_PRIVATE_KEY={{ .Env.GPG_PRIVATE_KEY }}
+#
+# Cosign example (keyless via OIDC not shown):
+#   - cmd: cosign
+#     artifacts: [checksum]
+#     args: ["sign-blob", "--yes", "--key=cosign.key", "--output-signature", "${artifact}.sig", "${artifact}"]
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+# No Docker images in this project; handled elsewhere if needed
+# dockers: []

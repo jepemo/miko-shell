@@ -6,7 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "1.0.0"
+// version is set at build time with -ldflags "-X github.com/jepemo/miko-shell/cmd.version=<value>"
+var version = "dev"
 
 var rootCmd = &cobra.Command{
 	Use:   "miko-shell",

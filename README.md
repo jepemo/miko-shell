@@ -1,56 +1,28 @@
 # Miko Shell 🐚
 
-_Consistent environments ## 3 – Open a dev shell
-miko-shell open – Open a dev shell
-miko-shell openthout the clutter_
+Declarative, reproducible dev environments backed by Docker or Podman. One YAML file, same toolchain for every developer and CI job.
 
-[![CI](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml)
-[![Release](https://github.com/jepemo/miko-shell/actions/workflows/release.yml/badge.svg)](https://github.com/jepemo/miko-shell/actions/workflows/release.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jepemo/miko-shell)](https://goreportcard.com/report/github.com/jepemo/miko-shell)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Miko Shell packages your project inside a lightweight container so every developer—local, remote or CI—runs the same toolchain. Simple, repeatable, and easy to clean up.
+[CI](https://github.com/jepemo/miko-shell/actions/workflows/ci.yml) • [Releases](https://github.com/jepemo/miko-shell/releases) • [License](LICENSE)
 
 ---
 
-## 🚀 Why use it
-
-- **Single YAML setup** – replaces long “install X, Y, Z” guides.
-- **Docker _or_ Podman** – choose the engine you already use.
-- **Fast rebuilds** – layer caching avoids redundant work.
-- **Cross‑platform** – Linux, macOS, Windows (WSL 2).
-- **Named scripts** – run `miko-shell run test` instead of memorising commands.
-- **No lock‑in** – underneath it’s just containers.
-
----
-
-## 🛠 Installation (under a minute)
-
-| Option               | Command                                                                          | When to use                                            |
-| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| **Bootstrap script** | `./bootstrap.sh`                                                                 | Fresh checkout; downloads Go 1.23.4, builds and tests. |
-| **Go toolchain**     | `make build`<br/>or `go build -o miko-shell .`                                   | If you’re working on Miko Shell itself.                |
-| **Pre‑built binary** | Download from the [releases page](https://github.com/jepemo/miko-shell/releases) | CI pipelines or quick evaluation.                      |
-
----
-
-## Quick‑start
+## Quick Start
 
 ```bash
-# 1 – Initialise in your project folder
-miko-shell init            # or   miko-shell init --dockerfile
+# 1) Create a config
+miko-shell init               # or: miko-shell init --dockerfile
 
-# 2 – Edit the generated miko-shell.yaml (example below)
+# 2) (Optional) Build the image
+miko-shell build
 
-# 3 – Open a dev shell
-miko-shell shell
+# 3) Discover available scripts
+miko-shell run
 
-# 4 – Run predefined tasks
+# 4) Run a script
 miko-shell run test
-miko-shell run greet Alice 42
 ```
 
-### Minimal example `miko-shell.yaml`
+Minimal `miko-shell.yaml`:
 
 ```yaml
 name: my-project
@@ -58,7 +30,7 @@ container:
   provider: docker
   image: alpine:latest
   setup:
-    - apk add curl git
+    - apk add --no-cache curl git
 shell:
   startup:
     - echo "Welcome to the development shell"
@@ -66,74 +38,59 @@ shell:
     - name: test
       commands:
         - go test ./...
-    - name: greet
-      commands:
-        - echo "Hello $1, you are $2 years old"
 ```
 
 ---
 
-## 🧩 Configuration overview
+## Install
 
-| Key                  | Purpose                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `name`               | Project label; also used as an image tag.                                                       |
-| `container.provider` | `docker` (default) or `podman`.                                                                 |
-| `container.image`    | Base image if you **don’t** supply a Dockerfile.                                                |
-| `container.build.*`  | Path, context and build args when you **do** use a Dockerfile.                                  |
-| `container.setup`    | Commands executed at build time (apt‑get, apk, npm…).                                           |
-| `shell.startup`      | Commands executed on every `shell` or `run`.                                                    |
-| `shell.scripts[]`    | Named tasks; call with `miko-shell run <name> [args…]`. Positional `$1`, `$2`, … are available. |
-
----
-
-## 🍱 Templates to start from
-
-Ready‑to‑use configurations live in `examples/`:
-
-Python • Node/Pnpm • Go • Rust • Elixir/Phoenix • PHP • Ruby/Rails • Java
-Copy, rename, tweak:
+- Quick install:
 
 ```bash
-cp examples/miko-shell-go.example.yaml miko-shell.yaml
+curl -sSL https://raw.githubusercontent.com/jepemo/miko-shell/main/install.sh | bash
 ```
 
----
+- Uninstall:
 
-## ⚙️  How it works internally
+```bash
+curl -sSL https://raw.githubusercontent.com/jepemo/miko-shell/main/install.sh | bash -s -- --uninstall
+```
 
-1. **Reads** your `miko-shell.yaml`.
-2. **Builds or reuses** an image tagged `name:<config‑hash>`.
-3. **Mounts** the repository at `/workspace`.
-4. **Executes** the script or opens an interactive shell.
-5. **Leaves** your host system untouched.
-
----
-
-## 🔎 Tips
-
-- **Ad‑hoc commands**: `miko-shell run -- cargo tree` – everything after `--` is passed verbatim.
-- **Performance**: keep heavy dependency installation in `setup`; `startup` runs on every command.
-- **CI integration**: configure your pipeline to run `miko-shell run test` instead of duplicating logic.
-- **Switch engines**: change `provider` to `podman` if that’s what your team prefers.
+- Bootstrap from local checkout: `./bootstrap.sh`
+- From source: `make build` or `go build -o miko-shell .`
+- Prebuilt binaries: see [Releases](https://github.com/jepemo/miko-shell/releases)
 
 ---
 
-## 🤝 Contributing
+## Commands (condensed)
 
-1. Fork the repository.
-2. `git switch -c feature/your-idea`
-3. Code, commit, test.
-4. Open a pull request.
+- `init` — scaffold a config (`--dockerfile` for Dockerfile-based builds)
+- `build` — build the container image from the config
+- `run` — list scripts (no args) or run `run <name> [args...]`
+- `version` — print version
 
-Clear commit messages help reviewers and future developers.
-
----
-
-## ⚖️ License
-
-MIT License.
+For details and advanced usage, see [DOCS.md](DOCS.md).
 
 ---
 
-Questions or issues? Open a discussion or report a bug at [https://github.com/jepemo/miko-shell](https://github.com/jepemo/miko-shell). We appreciate your feedback.
+## Examples
+
+Start from ready-made configs in `examples/`:
+
+```bash
+# Go
+miko-shell build -c examples/dev-config-go.example.yaml
+miko-shell run   -c examples/dev-config-go.example.yaml test
+
+# Next.js
+miko-shell build -c examples/dev-config-nextjs.example.yaml
+miko-shell run   -c examples/dev-config-nextjs.example.yaml dev
+```
+
+More examples and tips: `examples/README.md`, `examples/USAGE.md`.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

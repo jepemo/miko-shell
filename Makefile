@@ -11,7 +11,7 @@ all: build
 # Build the binary
 build:
 	@echo "Building $(BINARY_NAME)..."
-	go build -ldflags="-X 'miko-shell/cmd.version=$(VERSION)'" -o $(BINARY_NAME) .
+	go build -ldflags="-X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BINARY_NAME) .
 	@echo "Built $(BINARY_NAME) successfully!"
 
 # Clean build artifacts
@@ -19,8 +19,6 @@ clean:
 	@echo "Cleaning..."
 	rm -f $(BINARY_NAME)
 	rm -rf $(BUILD_DIR)
-	rm -f miko-shell.yaml
-	rm -f Dockerfile.miko-shell
 	rm -rf .bootstrap
 
 # Run tests
@@ -80,11 +78,11 @@ dev-setup:
 build-all:
 	@echo "Building for multiple platforms..."
 	mkdir -p $(BUILD_DIR)
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X 'miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-linux-amd64 .
-	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X 'miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-linux-arm64 .
-	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X 'miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-darwin-amd64 .
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X 'miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-darwin-arm64 .
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X 'miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-windows-amd64.exe .
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-linux-amd64 .
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-linux-arm64 .
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-darwin-arm64 .
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X 'github.com/jepemo/miko-shell/cmd.version=$(VERSION)'" -o $(BUILD_DIR)/miko-shell-windows-amd64.exe .
 
 # Run all checks (used in CI)
 check: fmt lint test

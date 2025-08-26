@@ -192,25 +192,8 @@ func (s *Script) GetCommandsAsString() string {
 
 // GetCommandsAsStringWithArgs converts Commands field to a shell command string with arguments
 func (s *Script) GetCommandsAsStringWithArgs(args []string) string {
-	var command string
-	
-	switch v := s.Commands.(type) {
-	case []interface{}:
-		// Handle array of commands
-		var commands []string
-		for _, cmd := range v {
-			commands = append(commands, fmt.Sprintf("%v", cmd))
-		}
-		command = strings.Join(commands, " && ")
-	case string:
-		// Handle single string (multiline block)
-		command = v
-	case []string:
-		// Handle array of strings
-		command = strings.Join(v, " && ")
-	default:
-		command = ""
-	}
+	// Join all commands with &&
+	command := strings.Join(s.Commands, " && ")
 
 	// If there are no arguments, return the command as is
 	if len(args) == 0 {
