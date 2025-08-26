@@ -185,10 +185,10 @@ container:
 shell:
   startup:
     - echo "Hello"
-	scripts:
-		- name: test
-			commands:
-				- echo "test command"
+  scripts:
+    - name: test
+      commands:
+        - echo "test command"
 `
 		if err := os.WriteFile(ConfigFileName, []byte(configContent), 0644); err != nil {
 			t.Fatalf("Failed to write config file: %v", err)

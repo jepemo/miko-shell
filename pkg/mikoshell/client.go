@@ -276,10 +276,10 @@ shell:
   scripts:
     - name: hello
       description: "Say hello and show system info"
-      commands: |
-        echo "Hello from miko-shell!"
-        uname -a
-        df -h /
+      commands:
+        - echo "Hello from miko-shell!"
+        - uname -a
+        - df -h /
     - name: test
       description: "Run a simple test"
       commands:
@@ -311,10 +311,10 @@ shell:
   scripts:
     - name: hello
       description: "Say hello and show system info"
-      commands: |
-        echo "Hello from miko-shell!"
-        uname -a
-        df -h /
+      commands:
+        - echo "Hello from miko-shell!"
+        - uname -a
+        - df -h /
     - name: example
       description: "Example custom command"
       commands:
