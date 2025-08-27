@@ -219,7 +219,7 @@ func (s *Script) GetCommandsAsStringWithArgs(args []string) string {
 		escaped := strings.ReplaceAll(arg, "'", "'\"'\"'")
 		argSetup += "'" + escaped + "' "
 	}
-	
+
 	// Combine argument setup with the actual command
 	return argSetup + "; " + command
 }

@@ -29,7 +29,7 @@ var buildCmd = &cobra.Command{
 		}
 
 		force, _ := cmd.Flags().GetBool("force")
-		
+
 		fmt.Println("Building container image...")
 		tag, err := client.BuildImageWithForce(force)
 		if err != nil {

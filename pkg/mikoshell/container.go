@@ -71,17 +71,17 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	var startupScript strings.Builder
 	startupScript.WriteString("#!/bin/sh\n")
 	startupScript.WriteString("set -e\n\n")
-	
+
 	// Agregar comandos de startup
 	for _, cmd := range cfg.Shell.InitHook {
 		startupScript.WriteString(cmd + "\n\n")
 	}
-	
+
 	// 2. Generar wrapper miko-shell
 	var mikoShell strings.Builder
 	mikoShell.WriteString("#!/bin/sh\n")
 	mikoShell.WriteString("set -e\n\n")
-	
+
 	// Función de ayuda
 	mikoShell.WriteString("show_help() {\n")
 	mikoShell.WriteString("  echo \"Miko Shell - Container development environment\"\n")
@@ -97,7 +97,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("  echo \"\"\n")
 	mikoShell.WriteString("  echo \"Run 'miko-shell run --help' for information about running scripts\"\n")
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para listar scripts
 	mikoShell.WriteString("list_scripts() {\n")
 	mikoShell.WriteString("  echo \"Available scripts:\"\n")
@@ -110,18 +110,18 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString(fmt.Sprintf("  echo \"  %-15s %s\"\n", script.Name, desc))
 	}
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para ejecutar scripts
 	mikoShell.WriteString("run_script() {\n")
 	mikoShell.WriteString("  script_name=\"$1\"\n")
 	mikoShell.WriteString("  shift\n\n")
 	mikoShell.WriteString("  case \"$script_name\" in\n")
-	
+
 	// Agregar case para cada script
 	for _, script := range cfg.Shell.Scripts {
 		mikoShell.WriteString(fmt.Sprintf("    %s)\n", script.Name))
 		mikoShell.WriteString("      # Ejecutar script con argumentos pasados\n")
-		
+
 		// Exportar variables para los argumentos posicionales
 		mikoShell.WriteString("      # Establecer argumentos posicionales\n")
 		mikoShell.WriteString("      i=1\n")
@@ -129,7 +129,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString("        export \"_MIKO_ARG_${i}=$arg\"\n")
 		mikoShell.WriteString("        i=$((i+1))\n")
 		mikoShell.WriteString("      done\n\n")
-		
+
 		// Ejecutar cada comando del script, reemplazando $1, $2, etc. con las variables exportadas
 		for _, cmd := range script.Commands {
 			// Reemplazar $1, $2, etc. con las variables _MIKO_ARG_1, _MIKO_ARG_2, etc.
@@ -141,24 +141,24 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 			}
 			mikoShell.WriteString(fmt.Sprintf("      %s\n", processedCmd))
 		}
-		
+
 		// Limpiar las variables de argumentos
 		mikoShell.WriteString("\n      # Limpiar variables de argumentos\n")
 		mikoShell.WriteString("      for j in $(seq 1 $((i-1))); do\n")
 		mikoShell.WriteString("        unset \"_MIKO_ARG_${j}\"\n")
 		mikoShell.WriteString("      done\n")
-		
+
 		mikoShell.WriteString("      return $?\n")
 		mikoShell.WriteString("      ;;\n")
 	}
-	
+
 	// Caso para comando directo (ejecuta el comando pasado directamente)
 	mikoShell.WriteString("    --)\n")
 	mikoShell.WriteString("      shift\n")
 	mikoShell.WriteString("      \"$@\"\n")
 	mikoShell.WriteString("      return $?\n")
 	mikoShell.WriteString("      ;;\n")
-	
+
 	// Caso para script desconocido
 	mikoShell.WriteString("    *)\n")
 	mikoShell.WriteString("      echo \"Error: Unknown script '$script_name'\"\n")
@@ -168,7 +168,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("      ;;\n")
 	mikoShell.WriteString("  esac\n")
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para mostrar ayuda de run
 	mikoShell.WriteString("show_run_help() {\n")
 	mikoShell.WriteString("  echo \"Run a script or command inside the container\"\n")
@@ -179,7 +179,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("  echo \"\"\n")
 	mikoShell.WriteString("  echo \"Available scripts:\"\n")
 	mikoShell.WriteString("  echo \"\"\n")
-	
+
 	// Listar scripts disponibles
 	for _, script := range cfg.Shell.Scripts {
 		desc := script.Description
@@ -189,13 +189,13 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString(fmt.Sprintf("  echo \"  %-15s %s\"\n", script.Name, desc))
 	}
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Comando principal
 	mikoShell.WriteString("# Detectar versión de la imagen\n")
 	mikoShell.WriteString("MIKO_VERSION=\"$(cat /tmp/miko-version 2>/dev/null || echo 'dev')\"\n\n")
 	mikoShell.WriteString("# Procesar comandos\n")
 	mikoShell.WriteString("case \"$1\" in\n")
-	
+
 	// Comando run
 	mikoShell.WriteString("  run)\n")
 	mikoShell.WriteString("    shift\n")
@@ -212,32 +212,32 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("    run_script \"$@\"\n")
 	mikoShell.WriteString("    exit $?\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando open (debe fallar dentro del contenedor)
 	mikoShell.WriteString("  open)\n")
 	mikoShell.WriteString("    echo \"Error: Already inside a miko-shell container\"\n")
 	mikoShell.WriteString("    echo \"The 'open' command can only be used from outside the container\"\n")
 	mikoShell.WriteString("    exit 1\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando list
 	mikoShell.WriteString("  list)\n")
 	mikoShell.WriteString("    list_scripts\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando version
 	mikoShell.WriteString("  version)\n")
 	mikoShell.WriteString("    echo \"miko-shell version $MIKO_VERSION\"\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando help o sin argumentos
 	mikoShell.WriteString("  help|-h|--help|\"\")\n")
 	mikoShell.WriteString("    show_help\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando desconocido
 	mikoShell.WriteString("  *)\n")
 	mikoShell.WriteString("    echo \"Error: Unknown command '$1'\"\n")
@@ -246,7 +246,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("    exit 1\n")
 	mikoShell.WriteString("    ;;\n")
 	mikoShell.WriteString("esac\n")
-	
+
 	// Crear el comando completo que:
 	// 1. Guarda la versión en un archivo
 	// 2. Crea el script miko-shell
@@ -256,7 +256,7 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	if v := os.Getenv("MIKO_VERSION"); v != "" {
 		version = v
 	}
-	
+
 	shellCommand := fmt.Sprintf(`
 # Save version information
 echo "%s" > /tmp/miko-version
@@ -282,12 +282,12 @@ exec /bin/sh --login
 MIKO_SCRIPT_EOF
 
 chmod +x /tmp/startup.sh
-exec /tmp/startup.sh`, 
+exec /tmp/startup.sh`,
 		version,
-		mikoShell.String(), 
-		
+		mikoShell.String(),
+
 		startupScript.String())
-	
+
 	// Run the command
 	return d.runContainer(cfg, tag, []string{"/bin/sh", "-c", shellCommand}, true)
 }
@@ -428,17 +428,17 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	var startupScript strings.Builder
 	startupScript.WriteString("#!/bin/sh\n")
 	startupScript.WriteString("set -e\n\n")
-	
+
 	// Agregar comandos de startup
 	for _, cmd := range cfg.Shell.InitHook {
 		startupScript.WriteString(cmd + "\n\n")
 	}
-	
+
 	// 2. Generar wrapper miko-shell
 	var mikoShell strings.Builder
 	mikoShell.WriteString("#!/bin/sh\n")
 	mikoShell.WriteString("set -e\n\n")
-	
+
 	// Función de ayuda
 	mikoShell.WriteString("show_help() {\n")
 	mikoShell.WriteString("  echo \"Miko Shell - Container development environment\"\n")
@@ -454,7 +454,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("  echo \"\"\n")
 	mikoShell.WriteString("  echo \"Run 'miko-shell run --help' for information about running scripts\"\n")
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para listar scripts
 	mikoShell.WriteString("list_scripts() {\n")
 	mikoShell.WriteString("  echo \"Available scripts:\"\n")
@@ -467,18 +467,18 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString(fmt.Sprintf("  echo \"  %-15s %s\"\n", script.Name, desc))
 	}
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para ejecutar scripts
 	mikoShell.WriteString("run_script() {\n")
 	mikoShell.WriteString("  script_name=\"$1\"\n")
 	mikoShell.WriteString("  shift\n\n")
 	mikoShell.WriteString("  case \"$script_name\" in\n")
-	
+
 	// Agregar case para cada script
 	for _, script := range cfg.Shell.Scripts {
 		mikoShell.WriteString(fmt.Sprintf("    %s)\n", script.Name))
 		mikoShell.WriteString("      # Ejecutar script con argumentos pasados\n")
-		
+
 		// Exportar variables para los argumentos posicionales
 		mikoShell.WriteString("      # Establecer argumentos posicionales\n")
 		mikoShell.WriteString("      i=1\n")
@@ -486,7 +486,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString("        export \"_MIKO_ARG_${i}=$arg\"\n")
 		mikoShell.WriteString("        i=$((i+1))\n")
 		mikoShell.WriteString("      done\n\n")
-		
+
 		// Ejecutar cada comando del script, reemplazando $1, $2, etc. con las variables exportadas
 		for _, cmd := range script.Commands {
 			// Reemplazar $1, $2, etc. con las variables _MIKO_ARG_1, _MIKO_ARG_2, etc.
@@ -498,24 +498,24 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 			}
 			mikoShell.WriteString(fmt.Sprintf("      %s\n", processedCmd))
 		}
-		
+
 		// Limpiar las variables de argumentos
 		mikoShell.WriteString("\n      # Limpiar variables de argumentos\n")
 		mikoShell.WriteString("      for j in $(seq 1 $((i-1))); do\n")
 		mikoShell.WriteString("        unset \"_MIKO_ARG_${j}\"\n")
 		mikoShell.WriteString("      done\n")
-		
+
 		mikoShell.WriteString("      return $?\n")
 		mikoShell.WriteString("      ;;\n")
 	}
-	
+
 	// Caso para comando directo (ejecuta el comando pasado directamente)
 	mikoShell.WriteString("    --)\n")
 	mikoShell.WriteString("      shift\n")
 	mikoShell.WriteString("      \"$@\"\n")
 	mikoShell.WriteString("      return $?\n")
 	mikoShell.WriteString("      ;;\n")
-	
+
 	// Caso para script desconocido
 	mikoShell.WriteString("    *)\n")
 	mikoShell.WriteString("      echo \"Error: Unknown script '$script_name'\"\n")
@@ -525,7 +525,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("      ;;\n")
 	mikoShell.WriteString("  esac\n")
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Función para mostrar ayuda de run
 	mikoShell.WriteString("show_run_help() {\n")
 	mikoShell.WriteString("  echo \"Run a script or command inside the container\"\n")
@@ -536,7 +536,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("  echo \"\"\n")
 	mikoShell.WriteString("  echo \"Available scripts:\"\n")
 	mikoShell.WriteString("  echo \"\"\n")
-	
+
 	// Listar scripts disponibles
 	for _, script := range cfg.Shell.Scripts {
 		desc := script.Description
@@ -546,13 +546,13 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 		mikoShell.WriteString(fmt.Sprintf("  echo \"  %-15s %s\"\n", script.Name, desc))
 	}
 	mikoShell.WriteString("}\n\n")
-	
+
 	// Comando principal
 	mikoShell.WriteString("# Detectar versión de la imagen\n")
 	mikoShell.WriteString("MIKO_VERSION=\"$(cat /tmp/miko-version 2>/dev/null || echo 'dev')\"\n\n")
 	mikoShell.WriteString("# Procesar comandos\n")
 	mikoShell.WriteString("case \"$1\" in\n")
-	
+
 	// Comando run
 	mikoShell.WriteString("  run)\n")
 	mikoShell.WriteString("    shift\n")
@@ -569,32 +569,32 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("    run_script \"$@\"\n")
 	mikoShell.WriteString("    exit $?\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando open (debe fallar dentro del contenedor)
 	mikoShell.WriteString("  open)\n")
 	mikoShell.WriteString("    echo \"Error: Already inside a miko-shell container\"\n")
 	mikoShell.WriteString("    echo \"The 'open' command can only be used from outside the container\"\n")
 	mikoShell.WriteString("    exit 1\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando list
 	mikoShell.WriteString("  list)\n")
 	mikoShell.WriteString("    list_scripts\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando version
 	mikoShell.WriteString("  version)\n")
 	mikoShell.WriteString("    echo \"miko-shell version $MIKO_VERSION\"\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando help o sin argumentos
 	mikoShell.WriteString("  help|-h|--help|\"\")\n")
 	mikoShell.WriteString("    show_help\n")
 	mikoShell.WriteString("    exit 0\n")
 	mikoShell.WriteString("    ;;\n")
-	
+
 	// Comando desconocido
 	mikoShell.WriteString("  *)\n")
 	mikoShell.WriteString("    echo \"Error: Unknown command '$1'\"\n")
@@ -603,7 +603,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("    exit 1\n")
 	mikoShell.WriteString("    ;;\n")
 	mikoShell.WriteString("esac\n")
-	
+
 	// Crear el comando completo que:
 	// 1. Guarda la versión en un archivo
 	// 2. Crea el script miko-shell
@@ -613,7 +613,7 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	if v := os.Getenv("MIKO_VERSION"); v != "" {
 		version = v
 	}
-	
+
 	shellCommand := fmt.Sprintf(`
 # Save version information
 echo "%s" > /tmp/miko-version
@@ -639,12 +639,12 @@ exec /bin/sh --login
 MIKO_SCRIPT_EOF
 
 chmod +x /tmp/startup.sh
-exec /tmp/startup.sh`, 
+exec /tmp/startup.sh`,
 		version,
-		mikoShell.String(), 
-		
+		mikoShell.String(),
+
 		startupScript.String())
-	
+
 	// Run the command
 	return p.runContainer(cfg, tag, []string{"/bin/sh", "-c", shellCommand}, true)
 }
