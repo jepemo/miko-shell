@@ -110,6 +110,11 @@ func (c *Client) InitProject(useDockerfile bool) error {
 
 // BuildImage builds the container image
 func (c *Client) BuildImage() (string, error) {
+	return c.BuildImageWithForce(false)
+}
+
+// BuildImageWithForce builds the container image, optionally forcing a rebuild
+func (c *Client) BuildImageWithForce(force bool) (string, error) {
 	if c.config == nil {
 		return "", fmt.Errorf("configuration not loaded")
 	}
@@ -120,6 +125,13 @@ func (c *Client) BuildImage() (string, error) {
 	}
 
 	tag := fmt.Sprintf("%s:%s", c.config.Name, hash)
+
+	// If force is enabled, remove existing image first
+	if force && c.provider.ImageExists(tag) {
+		if err := c.provider.RemoveImage(tag); err != nil {
+			return "", fmt.Errorf("failed to remove existing image: %w", err)
+		}
+	}
 
 	if err := c.provider.BuildImage(c.config, tag); err != nil {
 		return "", fmt.Errorf("failed to build image: %w", err)

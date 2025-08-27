@@ -28,8 +28,10 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
+		force, _ := cmd.Flags().GetBool("force")
+		
 		fmt.Println("Building container image...")
-		tag, err := client.BuildImage()
+		tag, err := client.BuildImageWithForce(force)
 		if err != nil {
 			return err
 		}
@@ -41,5 +43,6 @@ var buildCmd = &cobra.Command{
 
 func init() {
 	buildCmd.Flags().StringP("config", "c", "", "Path to configuration file (default: miko-shell.yaml)")
+	buildCmd.Flags().BoolP("force", "f", false, "Force rebuild by removing existing image first")
 	rootCmd.AddCommand(buildCmd)
 }

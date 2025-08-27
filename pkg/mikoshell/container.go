@@ -15,6 +15,7 @@ type ContainerProvider interface {
 	RunShell(cfg *Config, tag string) error
 	RunShellWithStartup(cfg *Config, tag string) error
 	ImageExists(tag string) bool
+	RemoveImage(tag string) error
 }
 
 // DockerProvider implements the ContainerProvider interface for Docker
@@ -294,6 +295,11 @@ exec /tmp/startup.sh`,
 func (d *DockerProvider) ImageExists(tag string) bool {
 	cmd := exec.Command("docker", "image", "inspect", tag)
 	return cmd.Run() == nil
+}
+
+func (d *DockerProvider) RemoveImage(tag string) error {
+	cmd := exec.Command("docker", "rmi", "-f", tag)
+	return cmd.Run()
 }
 
 func (d *DockerProvider) buildCustomImage(cfg *Config) error {
@@ -646,6 +652,11 @@ exec /tmp/startup.sh`,
 func (p *PodmanProvider) ImageExists(tag string) bool {
 	cmd := exec.Command("podman", "image", "inspect", tag)
 	return cmd.Run() == nil
+}
+
+func (p *PodmanProvider) RemoveImage(tag string) error {
+	cmd := exec.Command("podman", "rmi", "-f", tag)
+	return cmd.Run()
 }
 
 func (p *PodmanProvider) buildCustomImage(cfg *Config) error {

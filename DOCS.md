@@ -177,12 +177,17 @@ miko-shell init --dockerfile  # Dockerfile-driven build
 
 ### 5.2 build
 
-Build the image defined by the config. Usually optional — first `run`/`shell` will build as needed.
+Build the image defined by the config. Usually optional — first `run` will build as needed.
 
 ```bash
 miko-shell build
 miko-shell build -c examples/dev-config-go.example.yaml
+miko-shell build --force  # Force rebuild by removing existing image first
 ```
+
+Flags:
+- `--force, -f`: Remove existing image with same tag and rebuild from scratch
+- `--config, -c`: Path to configuration file
 
 ### 5.3 run
 
