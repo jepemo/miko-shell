@@ -736,12 +736,3 @@ func (p *PodmanProvider) generateDockerfile(cfg *Config) string {
 
 	return dockerfile.String()
 }
-
-// getScriptNames extracts script names from configuration for autocompletion
-func getScriptNames(cfg *Config) []string {
-	names := []string{}
-	for _, script := range cfg.Shell.Scripts {
-		names = append(names, script.Name)
-	}
-	return names
-}
