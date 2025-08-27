@@ -186,6 +186,7 @@ miko-shell build --force  # Force rebuild by removing existing image first
 ```
 
 Flags:
+
 - `--force, -f`: Remove existing image with same tag and rebuild from scratch
 - `--config, -c`: Path to configuration file
 

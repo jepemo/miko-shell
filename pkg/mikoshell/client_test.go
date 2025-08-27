@@ -33,6 +33,10 @@ func (m *MockContainerProvider) ImageExists(tag string) bool {
 	return true // Always exists in tests
 }
 
+func (m *MockContainerProvider) RemoveImage(tag string) error {
+	return nil // Mock successful image removal
+}
+
 func TestNewClient(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {
