@@ -29,12 +29,13 @@ Options (pass after -s --):
   --bin-dir DIR          Install destination (default: /usr/local/bin or ~/.local/bin)
   --asset URL            Override download URL explicitly
   --build-from-source    Build with 'go build' if release asset not found
+  --bootstrap            Use bootstrap.sh (downloads Go temporarily) as fallback
   --uninstall            Remove ${PROJECT} from common locations
 
 Examples:
   curl -sSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --help
   curl -sSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --version v1.0.0
-  curl -sSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --uninstall
+  curl -sSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --bootstrap
 EOF
 }
 
@@ -62,7 +63,14 @@ require_cmd() { command -v "$1" >/dev/null 2>&1 || { err "Missing required comma
 
 api_latest_tag() {
   require_cmd curl || return 1
-  curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/ *"tag_name": *"\([^"]*\)".*/\1/p' | head -n1
+  local result
+  result="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | sed -n 's/ *"tag_name": *"\([^"]*\)".*/\1/p' | head -n1 || true)"
+  if [ -z "$result" ]; then
+    # Fallback to a known good version if API fails
+    echo "v1.0.0"
+  else
+    echo "$result"
+  fi
 }
 
 download() {
@@ -103,9 +111,37 @@ uninstall() {
   fi
 }
 
+bootstrap_build() {
+  say "Using bootstrap method (downloads Go temporarily)"
+  local tmp bootstrap_script
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' EXIT
+  
+  # Download bootstrap script
+  bootstrap_script="$tmp/bootstrap.sh"
+  if download "https://raw.githubusercontent.com/${REPO}/main/bootstrap.sh" "$bootstrap_script"; then
+    chmod +x "$bootstrap_script"
+    cd "$tmp"
+    # Download repo and build
+    if download "https://github.com/${REPO}/archive/main.tar.gz" "$tmp/repo.tar.gz"; then
+      tar -xzf repo.tar.gz --strip-components=1
+      bash bootstrap.sh
+      if [ -f "miko-shell" ]; then
+        install_to_path "$tmp/miko-shell"
+        return 0
+      fi
+    fi
+  fi
+  err "Bootstrap build failed"
+  return 1
+}
 build_from_source() {
   say "Building from source (requires Go)"
-  require_cmd go
+  if ! command -v go >/dev/null 2>&1; then
+    err "Go is required to build from source but not found in PATH"
+    err "Please install Go from https://golang.org/dl/ or use a release binary"
+    return 1
+  fi
   local tmp
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
@@ -190,7 +226,7 @@ install_release() {
     tag="$(api_latest_tag)"
     [ -n "$tag" ] || { err "Unable to determine latest release"; return 1; }
   fi
-  say "Installing ${PROJECT} ${tag} for ${os}/${arch}"
+  say "Looking for ${PROJECT} ${tag} release for ${os}/${arch}"
 
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
@@ -199,7 +235,7 @@ install_release() {
     url="${ASSET_URL}"
   else
     while read -r candidate; do
-      say "Trying asset: ${candidate}"
+      say "Checking: $(basename "$candidate")"
       if curl -fsI "$candidate" >/dev/null 2>&1; then
         url="$candidate"; break
       fi
@@ -207,11 +243,12 @@ install_release() {
   fi
 
   if [ -z "${url:-}" ]; then
-    err "No matching release asset found"
+    say "No matching release asset found for ${os}/${arch}"
     return 1
   fi
 
   local file="$tmp/artifact"
+  say "Downloading: $(basename "$url")"
   download "$url" "$file"
   extract_and_install "$file"
 }
@@ -227,17 +264,26 @@ main() {
       --asset|--asset-url) ASSET_URL="$2"; shift ;;
       --uninstall) uninstall; exit 0 ;;
       --build-from-source) BUILD_FROM_SOURCE=1 ;;
+      --bootstrap) BOOTSTRAP=1 ;;
       *) err "Unknown option: $1"; usage; exit 1 ;;
     esac
     shift || true
   done
 
   if ! install_release; then
-    if [ "${BUILD_FROM_SOURCE:-0}" = "1" ]; then
+    say "No precompiled release found for your platform"
+    if [ "${BOOTSTRAP:-0}" = "1" ]; then
+      bootstrap_build
+    elif [ "${BUILD_FROM_SOURCE:-0}" = "1" ]; then
       build_from_source
     else
-      say "Falling back to --build-from-source (pass explicitly to skip this message)"
-      build_from_source
+      say "Options:"
+      say "  1. Try bootstrap (downloads Go temporarily):"
+      say "     curl -sSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash -s -- --bootstrap"
+      say "  2. Install Go and retry with --build-from-source"
+      say "  3. Check https://github.com/${REPO}/releases for manual download"
+      err "Installation failed - no precompiled binary available"
+      exit 1
     fi
   fi
 
