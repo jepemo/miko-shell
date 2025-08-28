@@ -81,8 +81,3 @@ issues:
 
   # Show only new issues created after git revision
   new: false
-
-output:
-  formats:
-    - format: colored-line-number
-      path: stdout
