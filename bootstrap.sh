@@ -122,6 +122,61 @@ build_project() {
     log_info "Binary location: ${SCRIPT_DIR}/${PROJECT_NAME}"
 }
 
+# Show help information
+show_help() {
+    cat << EOF
+Bootstrap script for ${PROJECT_NAME}
+
+USAGE:
+    ./bootstrap.sh [OPTION]
+
+OPTIONS:
+    --clean     Remove build artifacts (binaries, build/, .bootstrap/)
+                Same as 'make clean' but also removes miko-shell-host
+    --help      Show this help message
+    
+EXAMPLES:
+    ./bootstrap.sh          # Build the project
+    ./bootstrap.sh --clean  # Clean build artifacts
+    ./bootstrap.sh --help   # Show this help
+    
+DESCRIPTION:
+    This script downloads Go ${GO_VERSION} (if needed) and builds the ${PROJECT_NAME} project.
+    It's useful for bootstrapping development on systems without Go installed.
+
+EOF
+}
+
+# Clean up build artifacts (like make clean but also removes miko-shell-host)
+clean_project() {
+    log_info "Cleaning build artifacts..."
+    
+    # Remove binaries
+    if [ -f "./${PROJECT_NAME}" ]; then
+        log_info "Removing ${PROJECT_NAME}"
+        rm -f "./${PROJECT_NAME}"
+    fi
+    
+    if [ -f "./${PROJECT_NAME}-host" ]; then
+        log_info "Removing ${PROJECT_NAME}-host"
+        rm -f "./${PROJECT_NAME}-host"
+    fi
+    
+    # Remove build directory
+    if [ -d "build" ]; then
+        log_info "Removing build directory"
+        rm -rf "build"
+    fi
+    
+    # Remove bootstrap temporary directory
+    if [ -d ".bootstrap" ]; then
+        log_info "Removing .bootstrap directory"
+        rm -rf ".bootstrap"
+    fi
+    
+    log_success "Clean completed successfully!"
+}
+
 # Clean up temporary files
 cleanup() {
     if [ -d "${TEMP_DIR}" ]; then
@@ -132,6 +187,29 @@ cleanup() {
 
 # Main execution
 main() {
+    # Check for parameters
+    case "$1" in
+        --clean)
+            log_info "Clean mode - removing build artifacts"
+            log_info "=================================="
+            cd "${SCRIPT_DIR}"
+            clean_project
+            exit 0
+            ;;
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        "")
+            # No parameters, proceed with build
+            ;;
+        *)
+            log_error "Unknown parameter: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+    
     log_info "Bootstrap script for ${PROJECT_NAME}"
     log_info "======================================"
     
