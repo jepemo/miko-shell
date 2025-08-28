@@ -15,6 +15,7 @@ NC="\033[0m"
 
 say() { printf "${COLOR}==>${NC} %s\n" "$*"; }
 err() { printf "\033[1;31mERROR:${NC} %s\n" "$*" >&2; }
+print_info() { printf "${COLOR}[INFO]${NC} %s\n" "$*"; }
 
 usage() {
   cat <<EOF
@@ -115,7 +116,6 @@ bootstrap_build() {
   say "Using bootstrap method (downloads Go temporarily)"
   local tmp_bootstrap bootstrap_script
   tmp_bootstrap="$(mktemp -d)"
-  trap 'rm -rf "$tmp_bootstrap"' EXIT
   
   # Download bootstrap script
   bootstrap_script="$tmp_bootstrap/bootstrap.sh"
@@ -128,10 +128,12 @@ bootstrap_build() {
       bash bootstrap.sh
       if [ -f "miko-shell" ]; then
         install_to_path "$tmp_bootstrap/miko-shell"
+        rm -rf "$tmp_bootstrap"
         return 0
       fi
     fi
   fi
+  rm -rf "$tmp_bootstrap"
   err "Bootstrap build failed"
   return 1
 }
@@ -144,7 +146,7 @@ build_from_source() {
   fi
   local tmp_build
   tmp_build="$(mktemp -d)"
-  trap 'rm -rf "$tmp_build"' EXIT
+  
   # Build in current repo if .git present, else go install latest
   if [ -f go.mod ] && [ -f main.go ]; then
     say "Detected repo checkout; building locally"
@@ -154,6 +156,7 @@ build_from_source() {
     GO111MODULE=on GOBIN="$tmp_build" go install "github.com/${REPO}@${VERSION:-latest}"
   fi
   install_to_path "${tmp_build}/${PROJECT}"
+  rm -rf "$tmp_build"
 }
 
 install_to_path() {
@@ -180,34 +183,46 @@ install_to_path() {
 }
 
 extract_and_install() {
-  local archive="$1" tmp_extract dir bin
+  local archive="$1" tmp_extract binary_path
+  
+  # Create temp directory
   tmp_extract="$(mktemp -d)"
-  trap 'rm -rf "$tmp_extract"' EXIT
-  case "$archive" in
-    *.tar.gz|*.tgz)
-      tar -C "$tmp_extract" -xzf "$archive" ;;
-    *.zip)
-      require_cmd unzip
-      unzip -q "$archive" -d "$tmp_extract" ;;
-    *)
-      # Assume raw binary
-      install_to_path "$archive"
-      return
-      ;;
-  esac
-  # Locate binary inside archive (portable: don't rely on -perm variants)
-  bin="$(find "$tmp_extract" -type f -name "${PROJECT}" 2>/dev/null | head -n1 || true)"
-  if [ -z "$bin" ]; then
-    bin="$(find "$tmp_extract" -type f -name "${PROJECT}.exe" 2>/dev/null | head -n1 || true)"
+  cd "$tmp_extract"
+  
+  # Extract based on file type
+  print_info "Extracting archive..."
+  if [[ "$archive" == *.zip ]]; then
+    if ! command -v unzip >/dev/null 2>&1; then
+      err "unzip is required to extract zip files"
+      rm -rf "$tmp_extract"
+      return 1
+    fi
+    unzip -q "$archive"
+  else
+    tar -xzf "$archive"
   fi
-  if [ -n "$bin" ]; then
-    chmod +x "$bin" 2>/dev/null || true
+  
+  # Find the binary (might be in subdirectory)
+  binary_path=$(find . -name "$PROJECT" -type f | head -1)
+  
+  if [ -z "$binary_path" ]; then
+    binary_path=$(find . -name "${PROJECT}.exe" -type f | head -1)
   fi
-  if [ -z "$bin" ]; then
-    err "Could not locate ${PROJECT} binary in archive"
+  
+  if [ -z "$binary_path" ]; then
+    err "Could not locate $PROJECT binary in archive"
+    say "Archive contents:"
+    find . -type f 2>/dev/null || true
+    rm -rf "$tmp_extract"
     return 1
   fi
-  install_to_path "$bin"
+  
+  # Make executable and install
+  chmod +x "$binary_path"
+  install_to_path "$binary_path"
+  
+  # Cleanup
+  rm -rf "$tmp_extract"
 }
 
 choose_asset_candidates() {
@@ -238,7 +253,6 @@ install_release() {
   say "Looking for ${PROJECT} ${tag} release for ${os}/${arch}"
 
   tmp_release="$(mktemp -d)"
-  trap 'rm -rf "$tmp_release"' EXIT
 
   if [ -n "${ASSET_URL:-}" ]; then
     url="${ASSET_URL}"
@@ -253,13 +267,19 @@ install_release() {
 
   if [ -z "${url:-}" ]; then
     say "No matching release asset found for ${os}/${arch}"
+    rm -rf "$tmp_release"
     return 1
   fi
 
   local file="$tmp_release/artifact"
   say "Downloading: $(basename "$url")"
-  download "$url" "$file"
-  extract_and_install "$file"
+  if download "$url" "$file"; then
+    extract_and_install "$file"
+    rm -rf "$tmp_release"
+  else
+    rm -rf "$tmp_release"
+    return 1
+  fi
 }
 
 main() {
