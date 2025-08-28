@@ -82,6 +82,7 @@ issues:
   # Show only new issues created after git revision
   new: false
 
-# Simplified output configuration for compatibility
-# output:
-#   format: colored-line-number
+output:
+  formats:
+    - format: colored-line-number
+      path: stdout
