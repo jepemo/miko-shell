@@ -125,7 +125,12 @@ install_to_path() {
   dest_dir="$(detect_install_dir)"
   mkdir -p "$dest_dir"
   say "Installing to $dest_dir/${PROJECT}"
-  install -m 0755 "$src" "$dest_dir/${PROJECT}"
+  if command -v install >/dev/null 2>&1; then
+    install -m 0755 "$src" "$dest_dir/${PROJECT}"
+  else
+    cp -f "$src" "$dest_dir/${PROJECT}"
+    chmod 0755 "$dest_dir/${PROJECT}"
+  fi
   say "Installed: $("$dest_dir/${PROJECT}" --version 2>/dev/null || echo "${PROJECT}")"
 }
 
@@ -145,12 +150,13 @@ extract_and_install() {
       return
       ;;
   esac
-  # Find binary inside archive
-  bin="$(find "$tmp" -type f -name "${PROJECT}" -perm +111 -o -perm -111 2>/dev/null | head -n1 || true)"
+  # Locate binary inside archive (portable: don't rely on -perm variants)
+  bin="$(find "$tmp" -type f -name "${PROJECT}" 2>/dev/null | head -n1 || true)"
   if [ -z "$bin" ]; then
-    # Fallback: maybe named with .exe or without perms
-    bin="$(find "$tmp" -type f -name "${PROJECT}" -o -name "${PROJECT}.exe" 2>/dev/null | head -n1 || true)"
-    [ -n "$bin" ] && chmod +x "$bin" || true
+    bin="$(find "$tmp" -type f -name "${PROJECT}.exe" 2>/dev/null | head -n1 || true)"
+  fi
+  if [ -n "$bin" ]; then
+    chmod +x "$bin" 2>/dev/null || true
   fi
   if [ -z "$bin" ]; then
     err "Could not locate ${PROJECT} binary in archive"
