@@ -39,12 +39,12 @@ linters-settings:
   govet:
     enable-all: true
     disable:
-      - fieldalignment  # Don't worry about struct field alignment
-      - shadow         # Allow shadow variables
+      - fieldalignment # Don't worry about struct field alignment
+      - shadow # Allow shadow variables
 
   gosec:
     excludes:
-      - G306  # Expect WriteFile permissions to be 0600 or less (we use 0644 intentionally)
+      - G306 # Expect WriteFile permissions to be 0600 or less (we use 0644 intentionally)
 
   misspell:
     # Ignore Spanish words in comments
@@ -82,6 +82,6 @@ issues:
   # Show only new issues created after git revision
   new: false
 
-output:
-  formats:
-    - format: colored-line-number
+# Simplified output configuration for compatibility
+# output:
+#   format: colored-line-number

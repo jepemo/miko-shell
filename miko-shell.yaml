@@ -4,7 +4,7 @@ container:
   image: golang:1.23-alpine
   setup:
     - apk add --no-cache git make curl wget bash
-    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
     - go install golang.org/x/tools/cmd/goimports@latest
 shell:
   startup:
