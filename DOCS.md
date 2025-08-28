@@ -60,11 +60,64 @@ make build
 go build -o miko-shell .
 ```
 
-### 2.3 Prebuilt binaries
+### 2.3 Bootstrap script (No Go required)
+
+For systems without Go installed, use the bootstrap script that downloads Go and builds the project:
+
+```bash
+# Build the project (downloads Go if needed)
+./bootstrap.sh
+
+# Show help and all available options
+./bootstrap.sh --help
+```
+
+#### Bootstrap Options
+
+The bootstrap script supports several useful options:
+
+- **`./bootstrap.sh`** — Default behavior: build the project (downloads Go 1.23.4 if needed)
+
+- **`./bootstrap.sh --clean`** — Clean build artifacts, similar to `make clean` but also removes:
+  - `miko-shell` binary
+  - `miko-shell-host` binary
+  - `build/` directory
+  - `.bootstrap/` directory
+
+- **`./bootstrap.sh --clean-images`** — Remove all Docker/Podman images starting with 'miko-shell':
+  - `miko-shell:*` (any tag)
+  - `miko-shell-dev:*`
+  - `miko-shell-test:*`
+  - Any image beginning with `miko-shell`
+
+- **`./bootstrap.sh --help`** — Show detailed usage information
+
+#### Examples
+
+```bash
+# Clean everything and rebuild
+./bootstrap.sh --clean
+./bootstrap.sh
+
+# Clean only container images
+./bootstrap.sh --clean-images
+
+# Full cleanup (build artifacts + images)
+./bootstrap.sh --clean
+./bootstrap.sh --clean-images
+./bootstrap.sh  # rebuild
+```
+
+The bootstrap script is particularly useful for:
+- CI environments without Go pre-installed
+- Development on new machines
+- Consistent builds across different environments
+
+### 2.4 Prebuilt binaries
 
 Download from Releases and place on your PATH as `miko-shell`.
 
-### 2.4 Verify
+### 2.5 Verify
 
 ```bash
 miko-shell --help
@@ -319,6 +372,28 @@ test:
 | Engine not found            | Docker/Podman not installed/running | Install and start your engine                              |
 | Script not listed           | Name mismatch                       | Run `miko-shell run` to list; check `shell.scripts[].name` |
 | Command exits with non‑zero | Command failed inside container     | Fix the underlying command; exit code is preserved         |
+| Too many cached images      | Multiple miko-shell builds          | Use `./bootstrap.sh --clean-images` to clean all miko-shell images |
+| Disk space issues           | Build artifacts accumulation        | Use `./bootstrap.sh --clean` for build files, `--clean-images` for containers |
+
+### 9.1 Maintenance Commands
+
+For ongoing maintenance and cleanup:
+
+```bash
+# Clean build artifacts (binaries, temp directories)
+./bootstrap.sh --clean
+
+# Clean all miko-shell container images
+./bootstrap.sh --clean-images
+
+# Full cleanup and rebuild
+./bootstrap.sh --clean
+./bootstrap.sh --clean-images
+./bootstrap.sh
+
+# Using miko-shell build with force rebuild
+miko-shell build --force  # Removes existing image and rebuilds
+```
 
 ## 10. FAQ
 
