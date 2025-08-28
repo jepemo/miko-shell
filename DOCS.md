@@ -79,12 +79,14 @@ The bootstrap script supports several useful options:
 - **`./bootstrap.sh`** — Default behavior: build the project (downloads Go 1.23.4 if needed)
 
 - **`./bootstrap.sh --clean`** — Clean build artifacts, similar to `make clean` but also removes:
+
   - `miko-shell` binary
   - `miko-shell-host` binary
   - `build/` directory
   - `.bootstrap/` directory
 
 - **`./bootstrap.sh --clean-images`** — Remove all Docker/Podman images starting with 'miko-shell':
+
   - `miko-shell:*` (any tag)
   - `miko-shell-dev:*`
   - `miko-shell-test:*`
@@ -109,6 +111,7 @@ The bootstrap script supports several useful options:
 ```
 
 The bootstrap script is particularly useful for:
+
 - CI environments without Go pre-installed
 - Development on new machines
 - Consistent builds across different environments
@@ -365,14 +368,14 @@ test:
 
 ## 9. Troubleshooting
 
-| Symptom                     | Likely cause                        | Fix                                                        |
-| --------------------------- | ----------------------------------- | ---------------------------------------------------------- |
-| `miko-shell.yaml not found` | Missing config                      | Run `miko-shell init` or pass `-c`                         |
-| `invalid provider`          | Typo in `container.provider`        | Use `docker` or `podman`                                   |
-| Engine not found            | Docker/Podman not installed/running | Install and start your engine                              |
-| Script not listed           | Name mismatch                       | Run `miko-shell run` to list; check `shell.scripts[].name` |
-| Command exits with non‑zero | Command failed inside container     | Fix the underlying command; exit code is preserved         |
-| Too many cached images      | Multiple miko-shell builds          | Use `./bootstrap.sh --clean-images` to clean all miko-shell images |
+| Symptom                     | Likely cause                        | Fix                                                                           |
+| --------------------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
+| `miko-shell.yaml not found` | Missing config                      | Run `miko-shell init` or pass `-c`                                            |
+| `invalid provider`          | Typo in `container.provider`        | Use `docker` or `podman`                                                      |
+| Engine not found            | Docker/Podman not installed/running | Install and start your engine                                                 |
+| Script not listed           | Name mismatch                       | Run `miko-shell run` to list; check `shell.scripts[].name`                    |
+| Command exits with non‑zero | Command failed inside container     | Fix the underlying command; exit code is preserved                            |
+| Too many cached images      | Multiple miko-shell builds          | Use `./bootstrap.sh --clean-images` to clean all miko-shell images            |
 | Disk space issues           | Build artifacts accumulation        | Use `./bootstrap.sh --clean` for build files, `--clean-images` for containers |
 
 ### 9.1 Maintenance Commands
