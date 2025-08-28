@@ -113,21 +113,21 @@ uninstall() {
 
 bootstrap_build() {
   say "Using bootstrap method (downloads Go temporarily)"
-  local tmp bootstrap_script
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  local tmp_bootstrap bootstrap_script
+  tmp_bootstrap="$(mktemp -d)"
+  trap 'rm -rf "$tmp_bootstrap"' EXIT
   
   # Download bootstrap script
-  bootstrap_script="$tmp/bootstrap.sh"
+  bootstrap_script="$tmp_bootstrap/bootstrap.sh"
   if download "https://raw.githubusercontent.com/${REPO}/main/bootstrap.sh" "$bootstrap_script"; then
     chmod +x "$bootstrap_script"
-    cd "$tmp"
+    cd "$tmp_bootstrap"
     # Download repo and build
-    if download "https://github.com/${REPO}/archive/main.tar.gz" "$tmp/repo.tar.gz"; then
+    if download "https://github.com/${REPO}/archive/main.tar.gz" "$tmp_bootstrap/repo.tar.gz"; then
       tar -xzf repo.tar.gz --strip-components=1
       bash bootstrap.sh
       if [ -f "miko-shell" ]; then
-        install_to_path "$tmp/miko-shell"
+        install_to_path "$tmp_bootstrap/miko-shell"
         return 0
       fi
     fi
@@ -142,18 +142,18 @@ build_from_source() {
     err "Please install Go from https://golang.org/dl/ or use a release binary"
     return 1
   fi
-  local tmp
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  local tmp_build
+  tmp_build="$(mktemp -d)"
+  trap 'rm -rf "$tmp_build"' EXIT
   # Build in current repo if .git present, else go install latest
   if [ -f go.mod ] && [ -f main.go ]; then
     say "Detected repo checkout; building locally"
-    go build -o "${tmp}/${PROJECT}" .
+    go build -o "${tmp_build}/${PROJECT}" .
   else
     say "Using 'go install'"
-    GO111MODULE=on GOBIN="$tmp" go install "github.com/${REPO}@${VERSION:-latest}"
+    GO111MODULE=on GOBIN="$tmp_build" go install "github.com/${REPO}@${VERSION:-latest}"
   fi
-  install_to_path "${tmp}/${PROJECT}"
+  install_to_path "${tmp_build}/${PROJECT}"
 }
 
 install_to_path() {
@@ -168,18 +168,27 @@ install_to_path() {
     chmod 0755 "$dest_dir/${PROJECT}"
   fi
   say "Installed: $("$dest_dir/${PROJECT}" --version 2>/dev/null || echo "${PROJECT}")"
+  
+  # Check if binary is in PATH and provide instructions if not
+  if ! command -v "${PROJECT}" >/dev/null 2>&1; then
+    say ""
+    say "📝 Add to PATH: export PATH=\"$dest_dir:\$PATH\""
+    say "   For permanent: echo 'export PATH=\"$dest_dir:\$PATH\"' >> ~/.$(basename "$SHELL")rc"
+    say "   Then reload: source ~/.$(basename "$SHELL")rc"
+    say ""
+  fi
 }
 
 extract_and_install() {
-  local archive="$1" tmp dir bin
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  local archive="$1" tmp_extract dir bin
+  tmp_extract="$(mktemp -d)"
+  trap 'rm -rf "$tmp_extract"' EXIT
   case "$archive" in
     *.tar.gz|*.tgz)
-      tar -C "$tmp" -xzf "$archive" ;;
+      tar -C "$tmp_extract" -xzf "$archive" ;;
     *.zip)
       require_cmd unzip
-      unzip -q "$archive" -d "$tmp" ;;
+      unzip -q "$archive" -d "$tmp_extract" ;;
     *)
       # Assume raw binary
       install_to_path "$archive"
@@ -187,9 +196,9 @@ extract_and_install() {
       ;;
   esac
   # Locate binary inside archive (portable: don't rely on -perm variants)
-  bin="$(find "$tmp" -type f -name "${PROJECT}" 2>/dev/null | head -n1 || true)"
+  bin="$(find "$tmp_extract" -type f -name "${PROJECT}" 2>/dev/null | head -n1 || true)"
   if [ -z "$bin" ]; then
-    bin="$(find "$tmp" -type f -name "${PROJECT}.exe" 2>/dev/null | head -n1 || true)"
+    bin="$(find "$tmp_extract" -type f -name "${PROJECT}.exe" 2>/dev/null | head -n1 || true)"
   fi
   if [ -n "$bin" ]; then
     chmod +x "$bin" 2>/dev/null || true
@@ -215,7 +224,7 @@ EOF
 }
 
 install_release() {
-  local os arch tag url tmp
+  local os arch tag url tmp_release
   os="$(OS)"; arch="$(ARCH)";
   if [ "$os" = "unknown" ]; then err "Unsupported OS"; return 1; fi
   if [ "$arch" = "unknown" ]; then err "Unsupported ARCH"; return 1; fi
@@ -228,8 +237,8 @@ install_release() {
   fi
   say "Looking for ${PROJECT} ${tag} release for ${os}/${arch}"
 
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  tmp_release="$(mktemp -d)"
+  trap 'rm -rf "$tmp_release"' EXIT
 
   if [ -n "${ASSET_URL:-}" ]; then
     url="${ASSET_URL}"
@@ -247,7 +256,7 @@ install_release() {
     return 1
   fi
 
-  local file="$tmp/artifact"
+  local file="$tmp_release/artifact"
   say "Downloading: $(basename "$url")"
   download "$url" "$file"
   extract_and_install "$file"
