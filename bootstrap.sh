@@ -131,14 +131,17 @@ USAGE:
     ./bootstrap.sh [OPTION]
 
 OPTIONS:
-    --clean     Remove build artifacts (binaries, build/, .bootstrap/)
-                Same as 'make clean' but also removes miko-shell-host
-    --help      Show this help message
+    --clean         Remove build artifacts (binaries, build/, .bootstrap/)
+                    Same as 'make clean' but also removes miko-shell-host
+    --clean-images  Remove all Docker/Podman images starting with 'miko-shell'
+                    Includes miko-shell:*, miko-shell-dev:*, etc.
+    --help          Show this help message
     
 EXAMPLES:
-    ./bootstrap.sh          # Build the project
-    ./bootstrap.sh --clean  # Clean build artifacts
-    ./bootstrap.sh --help   # Show this help
+    ./bootstrap.sh              # Build the project
+    ./bootstrap.sh --clean      # Clean build artifacts
+    ./bootstrap.sh --clean-images  # Clean container images
+    ./bootstrap.sh --help       # Show this help
     
 DESCRIPTION:
     This script downloads Go ${GO_VERSION} (if needed) and builds the ${PROJECT_NAME} project.
@@ -177,6 +180,83 @@ clean_project() {
     log_success "Clean completed successfully!"
 }
 
+# Clean up Docker/Podman images for miko-shell
+clean_images() {
+    log_info "Cleaning Docker/Podman images for ${PROJECT_NAME}..."
+    
+    local images_found=false
+    
+    # Check for Docker
+    if command -v docker >/dev/null 2>&1; then
+        log_info "Checking Docker images..."
+        local docker_images=$(docker images --format "table {{.Repository}}:{{.Tag}}" | grep "^${PROJECT_NAME}" 2>/dev/null || true)
+        
+        if [ -n "$docker_images" ]; then
+            images_found=true
+            log_info "Found Docker images:"
+            echo "$docker_images" | while IFS= read -r image; do
+                if [ -n "$image" ] && [ "$image" != "REPOSITORY:TAG" ]; then
+                    log_info "  - $image"
+                fi
+            done
+            
+            # Remove the images
+            echo "$docker_images" | while IFS= read -r image; do
+                if [ -n "$image" ] && [ "$image" != "REPOSITORY:TAG" ]; then
+                    log_info "Removing Docker image: $image"
+                    if docker rmi -f "$image" >/dev/null 2>&1; then
+                        log_success "Removed: $image"
+                    else
+                        log_warning "Failed to remove: $image"
+                    fi
+                fi
+            done
+        else
+            log_info "No Docker images found starting with ${PROJECT_NAME}"
+        fi
+    else
+        log_info "Docker not found, skipping Docker image cleanup"
+    fi
+    
+    # Check for Podman
+    if command -v podman >/dev/null 2>&1; then
+        log_info "Checking Podman images..."
+        local podman_images=$(podman images --format "table {{.Repository}}:{{.Tag}}" | grep "^${PROJECT_NAME}" 2>/dev/null || true)
+        
+        if [ -n "$podman_images" ]; then
+            images_found=true
+            log_info "Found Podman images:"
+            echo "$podman_images" | while IFS= read -r image; do
+                if [ -n "$image" ] && [ "$image" != "REPOSITORY:TAG" ]; then
+                    log_info "  - $image"
+                fi
+            done
+            
+            # Remove the images
+            echo "$podman_images" | while IFS= read -r image; do
+                if [ -n "$image" ] && [ "$image" != "REPOSITORY:TAG" ]; then
+                    log_info "Removing Podman image: $image"
+                    if podman rmi -f "$image" >/dev/null 2>&1; then
+                        log_success "Removed: $image"
+                    else
+                        log_warning "Failed to remove: $image"
+                    fi
+                fi
+            done
+        else
+            log_info "No Podman images found starting with ${PROJECT_NAME}"
+        fi
+    else
+        log_info "Podman not found, skipping Podman image cleanup"
+    fi
+    
+    if [ "$images_found" = true ]; then
+        log_success "Image cleanup completed!"
+    else
+        log_info "No ${PROJECT_NAME} images found to clean"
+    fi
+}
+
 # Clean up temporary files
 cleanup() {
     if [ -d "${TEMP_DIR}" ]; then
@@ -194,6 +274,13 @@ main() {
             log_info "=================================="
             cd "${SCRIPT_DIR}"
             clean_project
+            exit 0
+            ;;
+        --clean-images)
+            log_info "Clean images mode - removing container images"
+            log_info "============================================="
+            cd "${SCRIPT_DIR}"
+            clean_images
             exit 0
             ;;
         --help|-h)
