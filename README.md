@@ -2,7 +2,6 @@
 
 [![Release](https://img.shields.io/github/v/release/jepemo/miko-shell)](https://github.com/jepemo/miko-shell/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/jepemo/miko-shell/ci.yml)](https://github.com/jepemo/miko-shell/actions)
-[![Go Report](https://goreportcard.com/badge/github.com/jepemo/miko-shell)](https://goreportcard.com/report/github.com/jepemo/miko-shell)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/jepemo/miko-shell)](https://github.com/jepemo/miko-shell/blob/main/go.mod)
 [![License](https://img.shields.io/github/license/jepemo/miko-shell)](LICENSE)
 

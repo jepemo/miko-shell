@@ -31,10 +31,23 @@ checksum:
 
 signs:
   - cmd: gpg
+    artifacts: checksum
     signature: "${artifact}.sig"
-    args: ["--batch", "--pinentry-mode", "loopback", "--passphrase-fd", "0", "--armor", "--detach-sign", "--output", "${signature}", "${artifact}"]
-    stdin: '{{ .Env.GPG_PASSPHRASE }}'
-  artifacts: checksum
+    args:
+      - --batch
+      - --yes
+      - --pinentry-mode
+      - loopback
+      - --passphrase-fd
+      - "0"
+      - -u
+      - "{{ .Env.GPG_KEY_ID }}"
+      - --armor
+      - --detach-sign
+      - --output
+      - "${signature}"
+      - "${artifact}"
+    stdin: "{{ .Env.GPG_PASSPHRASE }}"
 
 # Cosign example (keyless via OIDC not shown):
 #   - cmd: cosign
