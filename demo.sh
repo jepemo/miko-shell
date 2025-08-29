@@ -11,7 +11,7 @@ echo "1. Initializing new project..."
 
 echo
 echo "2. Building container image..."
-./miko-shell build
+./miko-shell image build
 
 echo
 echo "3. Running simple commands..."

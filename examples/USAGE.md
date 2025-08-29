@@ -9,7 +9,7 @@
 ./miko-shell init
 
 # Build the container image
-./miko-shell build
+./miko-shell image build
 
 # Run a command in the container
 ./miko-shell run python --version
@@ -22,7 +22,7 @@
 
 ```bash
 # Build with a specific configuration file
-./miko-shell build -c examples/miko-shell-python.example.yaml
+./miko-shell image build -c examples/miko-shell-python.example.yaml
 
 # Run commands with custom configuration
 ./miko-shell run -c examples/miko-shell-nextjs.example.yaml npm install
@@ -57,7 +57,7 @@
 
 ```bash
 # Use Python example configuration
-./miko-shell build -c examples/miko-shell-python.example.yaml
+./miko-shell image build -c examples/miko-shell-python.example.yaml
 ./miko-shell run -c examples/miko-shell-python.example.yaml test
 ./miko-shell run -c examples/miko-shell-python.example.yaml install
 ```
@@ -66,7 +66,7 @@
 
 ```bash
 # Use JavaScript example configuration
-./miko-shell build -c examples/miko-shell-javascript.example.yaml
+./miko-shell image build -c examples/miko-shell-javascript.example.yaml
 ./miko-shell run -c examples/miko-shell-javascript.example.yaml npm install
 ./miko-shell run -c examples/miko-shell-javascript.example.yaml test
 ```
@@ -75,7 +75,7 @@
 
 ```bash
 # Use Go example configuration
-./miko-shell build -c examples/miko-shell-go.example.yaml
+./miko-shell image build -c examples/miko-shell-go.example.yaml
 ./miko-shell run -c examples/miko-shell-go.example.yaml build
 ./miko-shell run -c examples/miko-shell-go.example.yaml test
 ```
@@ -84,15 +84,15 @@
 
 ```bash
 # Django development
-./miko-shell build -c examples/miko-shell-django.example.yaml
+./miko-shell image build -c examples/miko-shell-django.example.yaml
 ./miko-shell run -c examples/miko-shell-django.example.yaml runserver
 
 # Next.js development
-./miko-shell build -c examples/miko-shell-nextjs.example.yaml
+./miko-shell image build -c examples/miko-shell-nextjs.example.yaml
 ./miko-shell run -c examples/miko-shell-nextjs.example.yaml dev
 
 # Spring Boot development
-./miko-shell build -c examples/miko-shell-spring-boot.example.yaml
+./miko-shell image build -c examples/miko-shell-spring-boot.example.yaml
 ./miko-shell run -c examples/miko-shell-spring-boot.example.yaml bootrun
 ```
 
@@ -161,7 +161,7 @@ shell:
    ls -la examples/miko-shell-python.example.yaml
 
    # Use absolute path if needed
-   ./miko-shell build -c /full/path/to/config.yaml
+   ./miko-shell image build -c /full/path/to/config.yaml
    ```
 
 2. **Container provider not available**
@@ -171,7 +171,7 @@ shell:
    docker info
 
    # Or use Podman
-   ./miko-shell build -c examples/miko-shell-python.example.yaml
+   ./miko-shell image build -c examples/miko-shell-python.example.yaml
    ```
 
 3. **Permission errors**

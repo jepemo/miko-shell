@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - `miko-shell init` - Initialize new projects
-- `miko-shell build` - Build container images
+- `miko-shell image build` - Build container images
 - `miko-shell run <command>` - Execute commands in containers
 - `miko-shell shell` - Open interactive shell
 - Configuration-based project setup

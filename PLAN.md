@@ -42,12 +42,12 @@ miko-shell init --dockerfile  # or -d
 
 ✅ **Status**: Fully implemented with validation and Dockerfile generation.
 
-### `build` - Build Container Image
+### `image build` - Build Container Image
 
 Generates a container image from the configuration.
 
 ```bash
-miko-shell build
+miko-shell image build
 ```
 
 ✅ **Status**: Fully implemented with caching and error handling.
@@ -368,6 +368,6 @@ Pre-configured examples in `examples/` directory:
    - Run scripts: `miko-shell run script-name [args]`
    - Run commands: `miko-shell run command` or `miko-shell run -- command -flags`
    - Interactive shell: `miko-shell shell`
-4. **Build** (optional): `miko-shell build` for explicit image building
+4. **Build** (optional): `miko-shell image build` for explicit image building
 
 The tool automatically handles image building, caching, and cleanup, providing a seamless containerized development experience.

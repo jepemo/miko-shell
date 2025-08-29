@@ -8,12 +8,12 @@ You can use any of these examples with the `-c/--config` flag:
 
 ```bash
 # Use a specific configuration file
-./miko-shell build -c examples/miko-shell-python.example.yaml
+./miko-shell image build -c examples/miko-shell-python.example.yaml
 ./miko-shell run -c examples/miko-shell-nextjs.example.yaml
 ./miko-shell open -c examples/miko-shell-go.example.yaml
 
 # Default behavior (looks for miko-shell.yaml in current directory)
-./miko-shell build
+./miko-shell image build
 ./miko-shell run
 ./miko-shell open
 ```

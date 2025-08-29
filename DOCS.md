@@ -134,7 +134,7 @@ miko-shell version
 miko-shell init               # or: miko-shell init --dockerfile
 
 # 2) Build the image (optional – auto-build on first run)
-miko-shell build
+miko-shell image build
 
 # 3) List available scripts
 miko-shell run
@@ -231,20 +231,44 @@ miko-shell init           # prebuilt base image + setup commands
 miko-shell init --dockerfile  # Dockerfile-driven build
 ```
 
-### 5.2 build
+### 5.2 run
 
-Build the image defined by the config. Usually optional — first `run` will build as needed.
+Run a named script or an ad‑hoc command inside the container.
 
 ```bash
-miko-shell build
-miko-shell build -c examples/dev-config-go.example.yaml
-miko-shell build --force  # Force rebuild by removing existing image first
+# List available scripts (no args)
+miko-shell run
+
+# Run a named script
+miko-shell run test
+miko-shell run greet Alice 42
+
+# Ad‑hoc command (everything after -- is passed verbatim)
+miko-shell run -- go env
 ```
 
-Flags:
+Exit codes: infrastructure errors (e.g., config invalid, engine missing) are returned with explanatory messages; script command failures propagate the command's exit code without extra help output.
 
-- `--force, -f`: Remove existing image with same tag and rebuild from scratch
-- `--config, -c`: Path to configuration file
+### 5.3 open
+
+Open an interactive shell inside the development environment.
+
+```bash
+miko-shell open
+miko-shell open -c examples/dev-config-go.example.yaml
+```
+
+This provides direct access to the containerized environment for debugging, exploration, or manual operations.
+
+### 5.4 image
+
+Comprehensive container image management with multiple subcommands.
+
+```bash
+# Build container image
+miko-shell image build
+miko-shell image build --force  # Force rebuild
+```
 
 ### 5.3 run
 
@@ -280,7 +304,7 @@ This provides direct access to the containerized environment for debugging, expl
 Comprehensive container image management with multiple subcommands.
 
 ```bash
-# Build container image (alternative to miko-shell build)
+# Build container image
 miko-shell image build
 miko-shell image build --force  # Force rebuild
 
@@ -303,13 +327,13 @@ miko-shell image prune --force   # Skip confirmation
 
 The `image` command provides a modern, Docker-like interface for managing container images:
 
-- **`build`**: Same functionality as `miko-shell build` with improved UX
+- **`build`**: Same functionality as the previous standalone build command with improved UX
 - **`list`**: View all miko-shell related images with metadata
 - **`clean`**: Remove unused images to reclaim disk space
 - **`info`**: Inspect image details, layers, and configuration
 - **`prune`**: System-wide cleanup of unused images and build cache
 
-### 5.6 version
+### 5.5 version
 
 Show version information.
 
@@ -317,7 +341,7 @@ Show version information.
 miko-shell version
 ```
 
-### 5.7 completion
+### 5.6 completion
 
 Generate shell autocompletion scripts for enhanced command-line experience.
 
@@ -335,15 +359,7 @@ miko-shell completion fish
 miko-shell completion powershell
 ```
 
-To enable autocompletion, follow the instructions provided by the command output for your specific shell.eveloper and CI job uses the same toolchain. It builds or reuses a container image from a simple YAML file, mounts your repo at `/workspace`, and runs named scripts or ad‑hoc commands.
-
-### 5.8 version
-
-Show version information.
-
-```bash
-miko-shell version
-```
+To enable autocompletion, follow the instructions provided by the command output for your specific shell.
 
 ## 6. Examples Library
 
@@ -413,7 +429,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image
         run: |
-          miko-shell build
+          miko-shell image build
       - name: Test
         run: |
           miko-shell run test
@@ -429,7 +445,7 @@ build:
   image: docker:stable
   services: [docker:dind]
   script:
-    - miko-shell build
+    - miko-shell image build
 
 test:
   stage: test
@@ -467,8 +483,8 @@ For ongoing maintenance and cleanup:
 ./bootstrap.sh --clean-images
 ./bootstrap.sh
 
-# Using miko-shell build with force rebuild
-miko-shell build --force  # Removes existing image and rebuilds
+# Using miko-shell image build with force rebuild
+miko-shell image build --force  # Removes existing image and rebuilds
 
 # Modern image management commands
 miko-shell image list     # See all miko-shell images
@@ -477,10 +493,6 @@ miko-shell image clean --all  # Remove all miko-shell images
 miko-shell image prune    # System-wide cleanup with confirmation
 miko-shell image prune --force  # System-wide cleanup without confirmation
 miko-shell image info     # Inspect current project's image
-```
-
-miko-shell build --force # Removes existing image and rebuilds
-
 ```
 
 ## 10. FAQ
