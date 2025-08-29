@@ -95,6 +95,33 @@ func NewClientWithConfig(config *Config) (*Client, error) {
 	return client, nil
 }
 
+// NewClientWithConfigFile creates a new miko-shell client instance with configuration and config file path
+func NewClientWithConfigFile(config *Config, configFile string) (*Client, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	client := &Client{
+		workingDir: workingDir,
+		config:     config,
+		configFile: configFile,
+	}
+
+	// Initialize the container provider
+	provider, err := NewContainerProvider(config.Container.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create container provider: %w", err)
+	}
+
+	if !provider.IsAvailable() {
+		return nil, fmt.Errorf("container provider '%s' is not available. Please install %s first", config.Container.Provider, config.Container.Provider)
+	}
+
+	client.provider = provider
+	return client, nil
+}
+
 // LoadConfig loads the configuration file
 func (c *Client) LoadConfig() error {
 	cfg, err := LoadConfig()

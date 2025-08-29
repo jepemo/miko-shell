@@ -35,7 +35,7 @@ Usage: miko-shell image info [IMAGE_ID]`,
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 
-		client, err := mikoshell.NewClientWithConfig(config)
+		client, err := mikoshell.NewClientWithConfigFile(config, configFile)
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

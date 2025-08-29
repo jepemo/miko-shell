@@ -40,7 +40,7 @@ Use --force to skip the confirmation prompt.`,
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 
-		client, err := mikoshell.NewClientWithConfig(config)
+		client, err := mikoshell.NewClientWithConfigFile(config, configFile)
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
