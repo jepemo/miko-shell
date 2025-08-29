@@ -88,6 +88,10 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("#!/bin/sh\n")
 	mikoShell.WriteString("set -e\n\n")
 
+	// Configurar PATH para incluir herramientas de Go
+	mikoShell.WriteString("# Ensure Go tools are in PATH\n")
+	mikoShell.WriteString("export PATH=\"/go/bin:/usr/local/go/bin:$PATH\"\n\n")
+
 	// Función de ayuda
 	mikoShell.WriteString("show_help() {\n")
 	mikoShell.WriteString("  echo \"Miko Shell - Container development environment\"\n")
@@ -277,12 +281,17 @@ chmod +x /usr/local/bin/miko-shell
 # Bash completion for miko-shell (disabled for sh compatibility)
 touch /etc/profile.d/miko-shell-completion.sh
 
+# Setup PATH to include Go tools for all sessions
+echo 'export PATH="/go/bin:/usr/local/go/bin:$PATH"' >> /etc/profile.d/miko-shell-path.sh
+
 # Setup prompt to show we're in a miko-shell
 echo 'PS1="[\[\e[1;32m\]miko-shell\[\e[0m\]] \w \$ "' >> /etc/profile.d/miko-shell-prompt.sh
 
 # Now run the startup script
 cat > /tmp/startup.sh << 'MIKO_SCRIPT_EOF'
 %s
+# Export PATH for interactive shell
+export PATH="/go/bin:/usr/local/go/bin:$PATH"
 # Start interactive shell
 exec /bin/sh --login
 MIKO_SCRIPT_EOF
@@ -445,6 +454,10 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	mikoShell.WriteString("#!/bin/sh\n")
 	mikoShell.WriteString("set -e\n\n")
 
+	// Configurar PATH para incluir herramientas de Go
+	mikoShell.WriteString("# Ensure Go tools are in PATH\n")
+	mikoShell.WriteString("export PATH=\"/go/bin:/usr/local/go/bin:$PATH\"\n\n")
+
 	// Función de ayuda
 	mikoShell.WriteString("show_help() {\n")
 	mikoShell.WriteString("  echo \"Miko Shell - Container development environment\"\n")
@@ -634,12 +647,17 @@ chmod +x /usr/local/bin/miko-shell
 # Bash completion for miko-shell (disabled for sh compatibility)
 touch /etc/profile.d/miko-shell-completion.sh
 
+# Setup PATH to include Go tools for all sessions
+echo 'export PATH="/go/bin:/usr/local/go/bin:$PATH"' >> /etc/profile.d/miko-shell-path.sh
+
 # Setup prompt to show we're in a miko-shell
 echo 'PS1="[\[\e[1;32m\]miko-shell\[\e[0m\]] \w \$ "' >> /etc/profile.d/miko-shell-prompt.sh
 
 # Now run the startup script
 cat > /tmp/startup.sh << 'MIKO_SCRIPT_EOF'
 %s
+# Export PATH for interactive shell
+export PATH="/go/bin:/usr/local/go/bin:$PATH"
 # Start interactive shell
 exec /bin/sh --login
 MIKO_SCRIPT_EOF
