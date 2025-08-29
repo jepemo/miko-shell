@@ -12,31 +12,29 @@ var buildCmd = &cobra.Command{
 	Short: "Build a container image from the configuration",
 	Long:  `Builds a container image based on the miko-shell.yaml configuration file.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client, err := mikoshell.NewClient()
-		if err != nil {
-			return fmt.Errorf("failed to create client: %w", err)
+		configFile, _ := cmd.Flags().GetString("config")
+		if configFile == "" {
+			configFile = "miko-shell.yaml"
 		}
 
-		configFile, _ := cmd.Flags().GetString("config")
-		if configFile != "" {
-			if err := client.LoadConfigFromFile(configFile); err != nil {
-				return err
-			}
-		} else {
-			if err := client.LoadConfig(); err != nil {
-				return err
-			}
+		config, err := mikoshell.LoadConfigFromFile(configFile)
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+
+		client, err := mikoshell.NewClientWithConfig(config)
+		if err != nil {
+			return fmt.Errorf("failed to create client: %w", err)
 		}
 
 		force, _ := cmd.Flags().GetBool("force")
 
 		fmt.Println("Building container image...")
-		tag, err := client.BuildImageWithForce(force)
-		if err != nil {
+		if err := client.BuildImage(force); err != nil {
 			return err
 		}
 
-		fmt.Printf("Successfully built image: %s\n", tag)
+		fmt.Println("Container image built successfully!")
 		return nil
 	},
 }

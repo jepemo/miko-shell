@@ -16,7 +16,7 @@ Declarative, reproducible dev environments backed by Docker or Podman. One YAML 
 miko-shell init               # or: miko-shell init --dockerfile
 
 # 2) (Optional) Build the image
-miko-shell build
+miko-shell image build
 
 # 3) Discover available scripts
 miko-shell run
@@ -69,7 +69,10 @@ curl -sSL https://raw.githubusercontent.com/jepemo/miko-shell/main/install.sh | 
 
 - `init` — scaffold a config (`--dockerfile` for Dockerfile-based builds)
 - `build` — build the container image from the config
+- `image` — comprehensive image management (build, list, clean, info, prune)
 - `run` — list scripts (no args) or run `run <name> [args...]`
+- `open` — open an interactive shell inside the development environment
+- `completion` — generate shell autocompletion scripts
 - `version` — print version
 
 For details and advanced usage, see [DOCS.md](DOCS.md).

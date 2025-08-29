@@ -4,7 +4,50 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
+
+// ImageInfo represents detailed information about a container image
+type ImageInfo struct {
+	ID           string            `json:"id"`
+	Tag          string            `json:"tag"`
+	Size         string            `json:"size"`
+	Created      time.Time         `json:"created"`
+	Platform     string            `json:"platform"`
+	Labels       map[string]string `json:"labels"`
+	Layers       []LayerInfo       `json:"layers"`
+	Env          []string          `json:"env"`
+	ExposedPorts []string          `json:"exposed_ports"`
+}
+
+// LayerInfo represents information about a container image layer
+type LayerInfo struct {
+	ID   string `json:"id"`
+	Size string `json:"size"`
+}
+
+// ImageListItem represents a container image in a list
+type ImageListItem struct {
+	ID      string    `json:"id"`
+	Tag     string    `json:"tag"`
+	Size    string    `json:"size"`
+	Created time.Time `json:"created"`
+}
+
+// PruneInfo represents information about what will be pruned
+type PruneInfo struct {
+	TotalImages    int    `json:"total_images"`
+	UnusedImages   int    `json:"unused_images"`
+	DanglingImages int    `json:"dangling_images"`
+	BuildCacheSize string `json:"build_cache_size"`
+	TotalSize      string `json:"total_size"`
+}
+
+// PruneResult represents the result of a prune operation
+type PruneResult struct {
+	RemovedImages  int    `json:"removed_images"`
+	ReclaimedSpace string `json:"reclaimed_space"`
+}
 
 // Client provides the main functionality of the miko-shell tool
 type Client struct {
@@ -24,6 +67,32 @@ func NewClient() (*Client, error) {
 	return &Client{
 		workingDir: workingDir,
 	}, nil
+}
+
+// NewClientWithConfig creates a new miko-shell client instance with configuration
+func NewClientWithConfig(config *Config) (*Client, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	client := &Client{
+		workingDir: workingDir,
+		config:     config,
+	}
+
+	// Initialize the container provider
+	provider, err := NewContainerProvider(config.Container.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create container provider: %w", err)
+	}
+
+	if !provider.IsAvailable() {
+		return nil, fmt.Errorf("container provider '%s' is not available. Please install %s first", config.Container.Provider, config.Container.Provider)
+	}
+
+	client.provider = provider
+	return client, nil
 }
 
 // LoadConfig loads the configuration file
@@ -108,12 +177,37 @@ func (c *Client) InitProject(useDockerfile bool) error {
 	return nil
 }
 
-// BuildImage builds the container image
-func (c *Client) BuildImage() (string, error) {
-	return c.BuildImageWithForce(false)
+// BuildImage builds the container image, optionally forcing a rebuild
+func (c *Client) BuildImage(force bool) error {
+	if c.config == nil {
+		return fmt.Errorf("configuration not loaded")
+	}
+
+	hash, err := GetConfigHashFromFile(c.configFile)
+	if err != nil {
+		return fmt.Errorf("failed to calculate config hash: %w", err)
+	}
+
+	tag := fmt.Sprintf("%s:%s", c.config.Name, hash)
+
+	// If force is enabled, remove existing image first
+	if force && c.provider.ImageExists(tag) {
+		if err := c.provider.RemoveImage(tag); err != nil {
+			return fmt.Errorf("failed to remove existing image: %w", err)
+		}
+	}
+
+	if err := c.provider.BuildImage(c.config, tag); err != nil {
+		return fmt.Errorf("failed to build image: %w", err)
+	}
+
+	return nil
 }
 
-// BuildImageWithForce builds the container image, optionally forcing a rebuild
+// BuildImageLegacy builds the container image (legacy version for compatibility)
+func (c *Client) BuildImageLegacy() (string, error) {
+	return c.BuildImageWithForce(false)
+}
 func (c *Client) BuildImageWithForce(force bool) (string, error) {
 	if c.config == nil {
 		return "", fmt.Errorf("configuration not loaded")
@@ -264,7 +358,7 @@ func (c *Client) ensureImageExists() (string, error) {
 	}
 
 	if !c.provider.ImageExists(tag) {
-		if _, err := c.BuildImage(); err != nil {
+		if err := c.BuildImage(false); err != nil {
 			return "", fmt.Errorf("failed to build image: %w", err)
 		}
 	}
@@ -362,4 +456,58 @@ CMD ["sh"]
 // SetProvider sets the container provider (useful for testing)
 func (c *Client) SetProvider(provider ContainerProvider) {
 	c.provider = provider
+}
+
+// ListImages returns a list of container images related to miko-shell
+func (c *Client) ListImages() ([]ImageListItem, error) {
+	if c.provider == nil {
+		return nil, fmt.Errorf("container provider not initialized")
+	}
+
+	return c.provider.ListImages()
+}
+
+// CleanImages removes unused or all miko-shell images
+func (c *Client) CleanImages(all bool) ([]string, error) {
+	if c.provider == nil {
+		return nil, fmt.Errorf("container provider not initialized")
+	}
+
+	return c.provider.CleanImages(all)
+}
+
+// GetImageInfo returns detailed information about a container image
+func (c *Client) GetImageInfo(imageID string) (*ImageInfo, error) {
+	if c.provider == nil {
+		return nil, fmt.Errorf("container provider not initialized")
+	}
+
+	// If no imageID provided, use current project's image
+	if imageID == "" {
+		tag, err := c.GetImageTag()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get current image tag: %w", err)
+		}
+		imageID = tag
+	}
+
+	return c.provider.GetImageInfo(imageID)
+}
+
+// GetPruneInfo returns information about what would be pruned
+func (c *Client) GetPruneInfo() (*PruneInfo, error) {
+	if c.provider == nil {
+		return nil, fmt.Errorf("container provider not initialized")
+	}
+
+	return c.provider.GetPruneInfo()
+}
+
+// PruneImages removes all unused images and build cache
+func (c *Client) PruneImages() (*PruneResult, error) {
+	if c.provider == nil {
+		return nil, fmt.Errorf("container provider not initialized")
+	}
+
+	return c.provider.PruneImages()
 }

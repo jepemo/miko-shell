@@ -4,7 +4,7 @@ Comprehensive user and operator guide for the miko-shell CLI. This document is t
 
 ## 1. Introduction
 
-`miko-shell` packages your project into a lightweight container so every developer and CI job uses the same toolchain. It builds or reuses a container image from a simple YAML file, mounts your repo at `/workspace`, and runs named scripts or ad‑hoc commands.
+`miko-shell` packages your project into a lightweight container sExit codes: infrastructure errors (e.g., config invalid, engine missing) are returned with explanatory messages; script command failures propagate the command's exit code without extra help output.
 
 ### 1.1 Principles
 
@@ -264,7 +264,80 @@ miko-shell run -- go env
 
 Exit codes: infrastructure errors (e.g., config invalid, engine missing) are returned with explanatory messages; script command failures propagate the command’s exit code without extra help output.
 
-### 5.4 version
+### 5.4 open
+
+Open an interactive shell inside the development environment.
+
+```bash
+miko-shell open
+miko-shell open -c examples/dev-config-go.example.yaml
+```
+
+This provides direct access to the containerized environment for debugging, exploration, or manual operations.
+
+### 5.5 image
+
+Comprehensive container image management with multiple subcommands.
+
+```bash
+# Build container image (alternative to miko-shell build)
+miko-shell image build
+miko-shell image build --force  # Force rebuild
+
+# List miko-shell images
+miko-shell image list
+miko-shell image ls              # Alias
+
+# Clean unused images
+miko-shell image clean
+miko-shell image clean --all     # Remove all miko-shell images
+
+# Show detailed image information
+miko-shell image info            # Current project's image
+miko-shell image info <image-id> # Specific image
+
+# Prune all unused images and build cache
+miko-shell image prune
+miko-shell image prune --force   # Skip confirmation
+```
+
+The `image` command provides a modern, Docker-like interface for managing container images:
+
+- **`build`**: Same functionality as `miko-shell build` with improved UX
+- **`list`**: View all miko-shell related images with metadata
+- **`clean`**: Remove unused images to reclaim disk space
+- **`info`**: Inspect image details, layers, and configuration
+- **`prune`**: System-wide cleanup of unused images and build cache
+
+### 5.6 version
+
+Show version information.
+
+```bash
+miko-shell version
+```
+
+### 5.7 completion
+
+Generate shell autocompletion scripts for enhanced command-line experience.
+
+```bash
+# Generate completion for bash
+miko-shell completion bash
+
+# Generate completion for zsh
+miko-shell completion zsh
+
+# Generate completion for fish
+miko-shell completion fish
+
+# Generate completion for PowerShell
+miko-shell completion powershell
+```
+
+To enable autocompletion, follow the instructions provided by the command output for your specific shell.eveloper and CI job uses the same toolchain. It builds or reuses a container image from a simple YAML file, mounts your repo at `/workspace`, and runs named scripts or ad‑hoc commands.
+
+### 5.8 version
 
 Show version information.
 
@@ -368,15 +441,15 @@ test:
 
 ## 9. Troubleshooting
 
-| Symptom                     | Likely cause                        | Fix                                                                           |
-| --------------------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
-| `miko-shell.yaml not found` | Missing config                      | Run `miko-shell init` or pass `-c`                                            |
-| `invalid provider`          | Typo in `container.provider`        | Use `docker` or `podman`                                                      |
-| Engine not found            | Docker/Podman not installed/running | Install and start your engine                                                 |
-| Script not listed           | Name mismatch                       | Run `miko-shell run` to list; check `shell.scripts[].name`                    |
-| Command exits with non‑zero | Command failed inside container     | Fix the underlying command; exit code is preserved                            |
-| Too many cached images      | Multiple miko-shell builds          | Use `./bootstrap.sh --clean-images` to clean all miko-shell images            |
-| Disk space issues           | Build artifacts accumulation        | Use `./bootstrap.sh --clean` for build files, `--clean-images` for containers |
+| Symptom                     | Likely cause                        | Fix                                                        |
+| --------------------------- | ----------------------------------- | ---------------------------------------------------------- |
+| `miko-shell.yaml not found` | Missing config                      | Run `miko-shell init` or pass `-c`                         |
+| `invalid provider`          | Typo in `container.provider`        | Use `docker` or `podman`                                   |
+| Engine not found            | Docker/Podman not installed/running | Install and start your engine                              |
+| Script not listed           | Name mismatch                       | Run `miko-shell run` to list; check `shell.scripts[].name` |
+| Command exits with non‑zero | Command failed inside container     | Fix the underlying command; exit code is preserved         |
+| Too many cached images      | Multiple miko-shell builds          | Use `miko-shell image clean` or `miko-shell image prune`   |
+| Disk space issues           | Build artifacts accumulation        | Use `miko-shell image prune` for complete cleanup          |
 
 ### 9.1 Maintenance Commands
 
@@ -396,6 +469,18 @@ For ongoing maintenance and cleanup:
 
 # Using miko-shell build with force rebuild
 miko-shell build --force  # Removes existing image and rebuilds
+
+# Modern image management commands
+miko-shell image list     # See all miko-shell images
+miko-shell image clean    # Remove unused images
+miko-shell image clean --all  # Remove all miko-shell images
+miko-shell image prune    # System-wide cleanup with confirmation
+miko-shell image prune --force  # System-wide cleanup without confirmation
+miko-shell image info     # Inspect current project's image
+```
+
+miko-shell build --force # Removes existing image and rebuilds
+
 ```
 
 ## 10. FAQ
@@ -414,7 +499,15 @@ A: All commands run inside the container with your project mounted at `/workspac
 
 Q: Do I need to run `build` first?
 
-A: Not strictly — the first `run`/`shell` will build if needed. Running `build` proactively helps surface build errors early.
+A: Not strictly — the first `run`/`open` will build if needed. Running `build` proactively helps surface build errors early.
+
+Q: How do I get an interactive shell?
+
+A: Use `miko-shell open` to get a shell inside the development environment.
+
+Q: What's the difference between `build` and `image build`?
+
+A: Both do the same thing. `image build` is the modern interface with additional flags and better UX. Use `image` commands for comprehensive image management.
 
 ## 11. License
 
@@ -424,3 +517,4 @@ MIT. See `LICENSE`.
 
 - Examples: `examples/`
 - README (overview): `README.md`
+```

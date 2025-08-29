@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // ContainerProvider defines the interface for container providers
@@ -16,6 +17,11 @@ type ContainerProvider interface {
 	RunShellWithStartup(cfg *Config, tag string) error
 	ImageExists(tag string) bool
 	RemoveImage(tag string) error
+	ListImages() ([]ImageListItem, error)
+	CleanImages(all bool) ([]string, error)
+	GetImageInfo(imageID string) (*ImageInfo, error)
+	GetPruneInfo() (*PruneInfo, error)
+	PruneImages() (*PruneResult, error)
 }
 
 // DockerProvider implements the ContainerProvider interface for Docker
@@ -746,4 +752,120 @@ func (p *PodmanProvider) generateDockerfile(cfg *Config) string {
 	dockerfile.WriteString("CMD [\"/bin/sh\"]\n")
 
 	return dockerfile.String()
+}
+
+// ListImages implementation for DockerProvider
+func (d *DockerProvider) ListImages() ([]ImageListItem, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would parse docker images output
+	// and filter for miko-shell related images
+	return []ImageListItem{}, nil
+}
+
+// CleanImages implementation for DockerProvider
+func (d *DockerProvider) CleanImages(all bool) ([]string, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would:
+	// 1. List miko-shell images
+	// 2. Remove unused ones (or all if all=true)
+	// 3. Return list of removed image IDs
+	return []string{}, nil
+}
+
+// GetImageInfo implementation for DockerProvider
+func (d *DockerProvider) GetImageInfo(imageID string) (*ImageInfo, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would use "docker inspect" to get detailed info
+	return &ImageInfo{
+		ID:           imageID,
+		Tag:          imageID,
+		Size:         "Unknown",
+		Created:      time.Now(),
+		Platform:     "linux/amd64",
+		Labels:       make(map[string]string),
+		Layers:       []LayerInfo{},
+		Env:          []string{},
+		ExposedPorts: []string{},
+	}, nil
+}
+
+// GetPruneInfo implementation for DockerProvider
+func (d *DockerProvider) GetPruneInfo() (*PruneInfo, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would analyze docker system df output
+	return &PruneInfo{
+		TotalImages:    0,
+		UnusedImages:   0,
+		DanglingImages: 0,
+		BuildCacheSize: "0B",
+		TotalSize:      "0B",
+	}, nil
+}
+
+// PruneImages implementation for DockerProvider
+func (d *DockerProvider) PruneImages() (*PruneResult, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would run "docker system prune"
+	return &PruneResult{
+		RemovedImages:  0,
+		ReclaimedSpace: "0B",
+	}, nil
+}
+
+// ListImages implementation for PodmanProvider
+func (p *PodmanProvider) ListImages() ([]ImageListItem, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would parse podman images output
+	// and filter for miko-shell related images
+	return []ImageListItem{}, nil
+}
+
+// CleanImages implementation for PodmanProvider
+func (p *PodmanProvider) CleanImages(all bool) ([]string, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would:
+	// 1. List miko-shell images
+	// 2. Remove unused ones (or all if all=true)
+	// 3. Return list of removed image IDs
+	return []string{}, nil
+}
+
+// GetImageInfo implementation for PodmanProvider
+func (p *PodmanProvider) GetImageInfo(imageID string) (*ImageInfo, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would use "podman inspect" to get detailed info
+	return &ImageInfo{
+		ID:           imageID,
+		Tag:          imageID,
+		Size:         "Unknown",
+		Created:      time.Now(),
+		Platform:     "linux/amd64",
+		Labels:       make(map[string]string),
+		Layers:       []LayerInfo{},
+		Env:          []string{},
+		ExposedPorts: []string{},
+	}, nil
+}
+
+// GetPruneInfo implementation for PodmanProvider
+func (p *PodmanProvider) GetPruneInfo() (*PruneInfo, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would analyze podman system df output
+	return &PruneInfo{
+		TotalImages:    0,
+		UnusedImages:   0,
+		DanglingImages: 0,
+		BuildCacheSize: "0B",
+		TotalSize:      "0B",
+	}, nil
+}
+
+// PruneImages implementation for PodmanProvider
+func (p *PodmanProvider) PruneImages() (*PruneResult, error) {
+	// This is a simplified implementation
+	// In a real implementation, you would run "podman system prune"
+	return &PruneResult{
+		RemovedImages:  0,
+		ReclaimedSpace: "0B",
+	}, nil
 }

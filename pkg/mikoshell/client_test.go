@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // MockContainerProvider implements ContainerProvider for testing
@@ -35,6 +36,52 @@ func (m *MockContainerProvider) ImageExists(tag string) bool {
 
 func (m *MockContainerProvider) RemoveImage(tag string) error {
 	return nil // Mock successful image removal
+}
+
+func (m *MockContainerProvider) ListImages() ([]ImageListItem, error) {
+	return []ImageListItem{
+		{
+			ID:      "test123",
+			Tag:     "test:latest",
+			Size:    "100MB",
+			Created: time.Now(),
+		},
+	}, nil
+}
+
+func (m *MockContainerProvider) CleanImages(all bool) ([]string, error) {
+	return []string{"removed1", "removed2"}, nil
+}
+
+func (m *MockContainerProvider) GetImageInfo(imageID string) (*ImageInfo, error) {
+	return &ImageInfo{
+		ID:           imageID,
+		Tag:          "test:latest",
+		Size:         "100MB",
+		Created:      time.Now(),
+		Platform:     "linux/amd64",
+		Labels:       make(map[string]string),
+		Layers:       []LayerInfo{},
+		Env:          []string{},
+		ExposedPorts: []string{},
+	}, nil
+}
+
+func (m *MockContainerProvider) GetPruneInfo() (*PruneInfo, error) {
+	return &PruneInfo{
+		TotalImages:    5,
+		UnusedImages:   3,
+		DanglingImages: 2,
+		BuildCacheSize: "50MB",
+		TotalSize:      "150MB",
+	}, nil
+}
+
+func (m *MockContainerProvider) PruneImages() (*PruneResult, error) {
+	return &PruneResult{
+		RemovedImages:  3,
+		ReclaimedSpace: "150MB",
+	}, nil
 }
 
 func TestNewClient(t *testing.T) {
