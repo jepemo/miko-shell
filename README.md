@@ -68,7 +68,6 @@ curl -sSL https://raw.githubusercontent.com/jepemo/miko-shell/main/install.sh | 
 ## Commands (condensed)
 
 - `init` — scaffold a config (`--dockerfile` for Dockerfile-based builds)
-- `build` — build the container image from the config
 - `image` — comprehensive image management (build, list, clean, info, prune)
 - `run` — list scripts (no args) or run `run <name> [args...]`
 - `open` — open an interactive shell inside the development environment
@@ -85,12 +84,12 @@ Start from ready-made configs in `examples/`:
 
 ```bash
 # Go
-miko-shell build -c examples/dev-config-go.example.yaml
-miko-shell run   -c examples/dev-config-go.example.yaml test
+miko-shell image build -c examples/dev-config-go.example.yaml # (Optional)
+miko-shell run         -c examples/dev-config-go.example.yaml test
 
 # Next.js
-miko-shell build -c examples/dev-config-nextjs.example.yaml
-miko-shell run   -c examples/dev-config-nextjs.example.yaml dev
+miko-shell image build -c examples/dev-config-nextjs.example.yaml # (Optional)
+miko-shell run         -c examples/dev-config-nextjs.example.yaml dev
 ```
 
 More examples and tips: `examples/README.md`, `examples/USAGE.md`.
