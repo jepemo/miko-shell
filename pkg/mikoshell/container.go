@@ -60,6 +60,68 @@ func (d *DockerProvider) BuildImage(cfg *Config, tag string) error {
 }
 
 func (d *DockerProvider) RunCommand(cfg *Config, tag string, command []string) error {
+	// If there are startup commands, we need to run them first to set up environment variables
+	if len(cfg.Shell.InitHook) > 0 {
+		// Create startup script
+		var startupScript strings.Builder
+		startupScript.WriteString("#!/bin/sh\n")
+		startupScript.WriteString("set -e\n\n")
+
+		for _, cmd := range cfg.Shell.InitHook {
+			startupScript.WriteString(cmd + "\n")
+		}
+
+		// Properly escape the original command for execution
+		var commandStr string
+		if len(command) == 3 && command[0] == "/bin/sh" && command[1] == "-c" {
+			// This is already a shell command, use it directly
+			commandStr = command[2]
+		} else {
+			// This is a direct command, need to properly quote arguments
+			escapedArgs := make([]string, len(command))
+			for i, arg := range command {
+				escapedArgs[i] = fmt.Sprintf("'%s'", strings.ReplaceAll(arg, "'", "'\"'\"'"))
+			}
+			commandStr = strings.Join(escapedArgs, " ")
+		}
+
+		// Create the complete command that runs startup, captures env, then runs the target command
+		fullCommand := fmt.Sprintf(`
+# Capture environment before startup
+env | sort > /tmp/env_before.txt
+
+# Run startup script
+%s
+
+# Capture environment after startup
+env | sort > /tmp/env_after.txt
+
+# Find new environment variables and create environment file
+comm -13 /tmp/env_before.txt /tmp/env_after.txt > /tmp/env_new.txt
+if [ -s /tmp/env_new.txt ]; then
+  mkdir -p /etc/profile.d
+  {
+    echo '# Auto-generated environment variables from miko-shell startup'
+    while IFS='=' read -r var_line || [ -n "$var_line" ]; do
+      if [ -n "$var_line" ]; then
+        echo "export $var_line"
+      fi
+    done < /tmp/env_new.txt
+  } > /etc/profile.d/miko-shell-env.sh
+  
+  # Source the environment file in current shell
+  . /etc/profile.d/miko-shell-env.sh
+fi
+
+# Run the actual command in the same shell context
+%s`, 
+			startupScript.String(), 
+			commandStr)
+
+		return d.runContainer(cfg, tag, []string{"/bin/sh", "-c", fullCommand}, false)
+	}
+	
+	// No startup commands, run directly
 	return d.runContainer(cfg, tag, command, false)
 }
 
@@ -78,10 +140,25 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	startupScript.WriteString("#!/bin/sh\n")
 	startupScript.WriteString("set -e\n\n")
 
+	// Capture initial environment before startup
+	startupScript.WriteString("# Capture initial environment\n")
+	startupScript.WriteString("env | sort > /tmp/env-before.txt\n\n")
+
 	// Agregar comandos de startup
 	for _, cmd := range cfg.Shell.InitHook {
 		startupScript.WriteString(cmd + "\n\n")
 	}
+
+	// Capture environment changes and persist them automatically
+	startupScript.WriteString("# Capture environment changes and persist them\n")
+	startupScript.WriteString("env | sort > /tmp/env-after.txt\n")
+	startupScript.WriteString("echo '#!/bin/sh' > /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("echo '# Variables exported during startup' >> /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("comm -13 /tmp/env-before.txt /tmp/env-after.txt | grep -v '^_=' | while read line; do\n")
+	startupScript.WriteString("  echo \"export $line\" >> /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("done\n")
+	startupScript.WriteString("chmod +x /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("rm -f /tmp/env-before.txt /tmp/env-after.txt\n\n")
 
 	// 2. Generar wrapper miko-shell
 	var mikoShell strings.Builder
@@ -123,6 +200,10 @@ func (d *DockerProvider) RunShellWithStartup(cfg *Config, tag string) error {
 
 	// Función para ejecutar scripts
 	mikoShell.WriteString("run_script() {\n")
+	mikoShell.WriteString("  # Load environment variables from startup script if they exist\n")
+	mikoShell.WriteString("  if [ -f /etc/profile.d/miko-shell-env.sh ]; then\n")
+	mikoShell.WriteString("    . /etc/profile.d/miko-shell-env.sh\n")
+	mikoShell.WriteString("  fi\n\n")
 	mikoShell.WriteString("  script_name=\"$1\"\n")
 	mikoShell.WriteString("  shift\n\n")
 	mikoShell.WriteString("  case \"$script_name\" in\n")
@@ -426,6 +507,68 @@ func (p *PodmanProvider) BuildImage(cfg *Config, tag string) error {
 }
 
 func (p *PodmanProvider) RunCommand(cfg *Config, tag string, command []string) error {
+	// If there are startup commands, we need to run them first to set up environment variables
+	if len(cfg.Shell.InitHook) > 0 {
+		// Create startup script
+		var startupScript strings.Builder
+		startupScript.WriteString("#!/bin/sh\n")
+		startupScript.WriteString("set -e\n\n")
+
+		for _, cmd := range cfg.Shell.InitHook {
+			startupScript.WriteString(cmd + "\n")
+		}
+
+		// Properly escape the original command for execution
+		var commandStr string
+		if len(command) == 3 && command[0] == "/bin/sh" && command[1] == "-c" {
+			// This is already a shell command, use it directly
+			commandStr = command[2]
+		} else {
+			// This is a direct command, need to properly quote arguments
+			escapedArgs := make([]string, len(command))
+			for i, arg := range command {
+				escapedArgs[i] = fmt.Sprintf("'%s'", strings.ReplaceAll(arg, "'", "'\"'\"'"))
+			}
+			commandStr = strings.Join(escapedArgs, " ")
+		}
+
+		// Create the complete command that runs startup, captures env, then runs the target command
+		fullCommand := fmt.Sprintf(`
+# Capture environment before startup
+env | sort > /tmp/env_before.txt
+
+# Run startup script
+%s
+
+# Capture environment after startup
+env | sort > /tmp/env_after.txt
+
+# Find new environment variables and create environment file
+comm -13 /tmp/env_before.txt /tmp/env_after.txt > /tmp/env_new.txt
+if [ -s /tmp/env_new.txt ]; then
+  mkdir -p /etc/profile.d
+  {
+    echo '# Auto-generated environment variables from miko-shell startup'
+    while IFS='=' read -r var_line || [ -n "$var_line" ]; do
+      if [ -n "$var_line" ]; then
+        echo "export $var_line"
+      fi
+    done < /tmp/env_new.txt
+  } > /etc/profile.d/miko-shell-env.sh
+  
+  # Source the environment file in current shell
+  . /etc/profile.d/miko-shell-env.sh
+fi
+
+# Run the actual command in the same shell context
+%s`, 
+			startupScript.String(), 
+			commandStr)
+
+		return p.runContainer(cfg, tag, []string{"/bin/sh", "-c", fullCommand}, false)
+	}
+	
+	// No startup commands, run directly
 	return p.runContainer(cfg, tag, command, false)
 }
 
@@ -444,10 +587,25 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 	startupScript.WriteString("#!/bin/sh\n")
 	startupScript.WriteString("set -e\n\n")
 
+	// Capture initial environment before startup
+	startupScript.WriteString("# Capture initial environment\n")
+	startupScript.WriteString("env | sort > /tmp/env-before.txt\n\n")
+
 	// Agregar comandos de startup
 	for _, cmd := range cfg.Shell.InitHook {
 		startupScript.WriteString(cmd + "\n\n")
 	}
+
+	// Capture environment changes and persist them automatically
+	startupScript.WriteString("# Capture environment changes and persist them\n")
+	startupScript.WriteString("env | sort > /tmp/env-after.txt\n")
+	startupScript.WriteString("echo '#!/bin/sh' > /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("echo '# Variables exported during startup' >> /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("comm -13 /tmp/env-before.txt /tmp/env-after.txt | grep -v '^_=' | while read line; do\n")
+	startupScript.WriteString("  echo \"export $line\" >> /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("done\n")
+	startupScript.WriteString("chmod +x /etc/profile.d/miko-shell-env.sh\n")
+	startupScript.WriteString("rm -f /tmp/env-before.txt /tmp/env-after.txt\n\n")
 
 	// 2. Generar wrapper miko-shell
 	var mikoShell strings.Builder
@@ -489,6 +647,10 @@ func (p *PodmanProvider) RunShellWithStartup(cfg *Config, tag string) error {
 
 	// Función para ejecutar scripts
 	mikoShell.WriteString("run_script() {\n")
+	mikoShell.WriteString("  # Load environment variables from startup script if they exist\n")
+	mikoShell.WriteString("  if [ -f /etc/profile.d/miko-shell-env.sh ]; then\n")
+	mikoShell.WriteString("    . /etc/profile.d/miko-shell-env.sh\n")
+	mikoShell.WriteString("  fi\n\n")
 	mikoShell.WriteString("  script_name=\"$1\"\n")
 	mikoShell.WriteString("  shift\n\n")
 	mikoShell.WriteString("  case \"$script_name\" in\n")

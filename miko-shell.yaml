@@ -8,6 +8,11 @@ container:
     - go install golang.org/x/tools/cmd/goimports@latest
 shell:
   startup:
+    # Test variables for automatic environment capture
+    - export PROJECT_VERSION=1.2.3
+    - export BUILD_TARGET=production
+    - export DEBUG_MODE=true
+    - export GO_VERSION=1.23
     - |
       cat <<'EOF'
              _ _               _       _ _ 
@@ -23,7 +28,7 @@ shell:
     - export PS1="\[\e[32m\]\u@\h:\w\[\e[0m\]$ "
   scripts:
     - name: deps
-      description: "Download and tidy dependencies"
+      description: Download and tidy dependencies
       commands:
         - echo "Downloading dependencies..."
         - go mod download
@@ -31,18 +36,20 @@ shell:
         - echo "Dependencies updated!"
 
     - name: build
-      description: "Build for host platform using MIKO_HOST_OS and MIKO_HOST_ARCH"
+      description: Build for host platform using MIKO_HOST_OS and MIKO_HOST_ARCH
       commands:
         - echo "==> Building miko-shell for host platform..."
-        - echo "Target $MIKO_HOST_OS/$MIKO_HOST_ARCH"
+        - echo "Project version $PROJECT_VERSION"
+        - echo "Build target $BUILD_TARGET"
+        - echo "Target platform $MIKO_HOST_OS/$MIKO_HOST_ARCH"
         - go mod tidy
-        - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        - VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "$PROJECT_VERSION")
         - GOOS=$MIKO_HOST_OS GOARCH=$MIKO_HOST_ARCH go build -ldflags="-X 'miko-shell/cmd.version=${VERSION}'" -o miko-shell-host .
         - cp -f miko-shell-host miko-shell
         - echo "==> Built miko-shell-host for $MIKO_HOST_OS/$MIKO_HOST_ARCH successfully!"
 
     - name: build-linux
-      description: "Build for Linux (container platform)"
+      description: Build for Linux (container platform)
       commands:
         - echo "==> Building miko-shell for Linux..."
         - go mod tidy
@@ -50,14 +57,14 @@ shell:
         - echo "==> Built miko-shell for Linux successfully!"
 
     - name: test
-      description: "Run tests"
+      description: Run tests
       commands:
         - echo "Running tests..."
         - go mod tidy
         - go test ./...
 
     - name: clean
-      description: "Clean build artifacts"
+      description: Clean build artifacts
       commands:
         - echo "Cleaning..."
         - rm -f miko-shell miko-shell-host
@@ -65,7 +72,7 @@ shell:
         - echo "Cleaned successfully!"
 
     - name: build-multi
-      description: "Build for multiple platforms"
+      description: Build for multiple platforms
       commands:
         - echo "==> Building for multiple platforms..."
         - mkdir -p build
@@ -83,27 +90,27 @@ shell:
         - ls -la build/
 
     - name: fmt
-      description: "Format code"
+      description: Format code
       commands:
         - echo "Formatting code..."
         - go fmt ./...
         - echo "Code formatted!"
 
     - name: lint
-      description: "Run linters"
+      description: Run linters
       commands:
         - echo "Running linters..."
         - golangci-lint run
         - echo "Linters completed!"
 
     - name: version
-      description: "Show version"
+      description: Show version
       commands:
         - go version
         - ./miko-shell --version || echo "miko-shell not built yet"
 
     - name: dev
-      description: "Development cycle: deps + build + test"
+      description: Development cycle - deps + build + test
       commands:
         - echo "==> Running development cycle..."
         - go mod download
@@ -115,7 +122,7 @@ shell:
         - echo "==> Development cycle completed!"
 
     - name: help
-      description: "Show available scripts"
+      description: Show available scripts
       commands:
         - echo "==> Available miko-shell development commands"
         - echo ""
@@ -135,6 +142,30 @@ shell:
         - echo "  clean       - Clean build artifacts"
         - echo "  version     - Show version info"
         - echo "  help        - Show this help"
+        - echo ""
+        - echo "==> Environment Tests"
+        - echo "  env-info    - Show startup environment variables"
+        - echo "  db-migrate  - Test database connection with env vars"
+
+    - name: env-info
+      description: Show environment variables set during startup
+      commands:
+        - echo "=== Environment Information ==="
+        - echo "Project Version $PROJECT_VERSION"
+        - echo "Go Version $GO_VERSION"
+        - echo "Debug Mode $DEBUG_MODE"
+        - echo "Build Target $BUILD_TARGET"
+        - echo "=== PATH ==="
+        - echo $PATH
+
+    - name: version-info
+      description: Show version information using env vars
+      commands:
+        - echo "Building miko-shell version $PROJECT_VERSION"
+        - echo "Go version requirement $GO_VERSION"
+        - echo "Target environment $BUILD_TARGET"
+        - echo "Debug enabled $DEBUG_MODE"
+        - go version
         - echo ""
         - echo "==> Platform Info"
         - echo "  Host OS $MIKO_HOST_OS"

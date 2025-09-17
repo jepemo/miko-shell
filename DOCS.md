@@ -4,7 +4,24 @@ Comprehensive user and operator guide for the miko-shell CLI. This document is t
 
 ## 1. Introduction
 
-`miko-shell` packages your project into a lightweight container sExit codes: infrastructure errors (e.g., config invalid, engine missing) are returned with explanatory messages; script command failures propagate the command's exit code without extra help output.
+`miko-shell` packages your project into### 4.3 Image caching and tagging
+
+`miko-shell` computes a short hash of your config and tags the built image as:
+
+```
+<normalized-name>:<config-hash>
+```
+
+When the config changes, a new tag is built; otherwise the existing image is reused.
+
+### 4.4 Runtime environment
+
+- The repository is mounted at `/workspace`
+- The working directory is `/workspace`
+- Host details are available to scripts when needed (for example via environment variables if provided by the wrapper). Typical variables:
+  - `MIKO_HOST_OS`, `MIKO_HOST_ARCH` (when supported)
+
+### 4.5 Docker and Podmantainer sExit codes: infrastructure errors (e.g., config invalid, engine missing) are returned with explanatory messages; script command failures propagate the command's exit code without extra help output.
 
 ### 1.1 Principles
 
@@ -195,7 +212,49 @@ Shell section:
   - `description` (optional)
   - `commands[]`: commands executed inside the container. Positional `$1`, `$2`, … map to arguments.
 
-### 4.2 Image caching and tagging
+### 4.2 Environment Variables
+
+`miko-shell` automatically captures and persists environment variables exported during startup, making them available to all scripts.
+
+#### Automatic Variable Persistence
+
+Any variables exported in the `startup` section are automatically captured and made available to:
+
+- All scripts executed via `miko-shell run <script>`
+- Interactive shell sessions via `miko-shell open`
+
+Example:
+
+```yaml
+shell:
+  startup:
+    - export PROJECT_VERSION=1.2.3
+    - export DATABASE_URL=postgres://user:pass@localhost/db
+    - export DEBUG_MODE=true
+  scripts:
+    - name: build
+      commands:
+        - echo "Building version: $PROJECT_VERSION"
+        - echo "Debug mode: $DEBUG_MODE"
+    - name: deploy
+      commands:
+        - echo "Deploying to: $DATABASE_URL"
+```
+
+#### How it works
+
+1. **Before startup**: Environment state is captured
+2. **During startup**: Your export commands are executed
+3. **After startup**: Changes are detected and automatically persisted to `/etc/profile.d/miko-shell-env.sh`
+4. **Script execution**: All scripts inherit these variables automatically
+
+#### Best Practices
+
+- Use `startup` for environment variables that should be available to all scripts
+- Export project-specific configuration (versions, URLs, flags)
+- Avoid exporting sensitive data; use runtime injection for secrets instead
+
+### 4.3 Image caching and tagging
 
 `miko-shell` computes a short hash of your config and tags the built image as:
 
@@ -370,6 +429,59 @@ The `examples/` directory includes ready‑to‑use configs for:
 - Elixir/Phoenix, Django, Java/Spring Boot
 
 Use them directly with `-c` or copy to your project as a starting point. See `examples/README.md` and `examples/USAGE.md`.
+
+### 6.1 Environment Variables Example
+
+Here's a practical example showing automatic environment variable persistence:
+
+```yaml
+name: my-app
+container:
+  provider: docker
+  image: node:18-alpine
+  setup:
+    - npm install -g typescript @types/node
+shell:
+  startup:
+    # These variables will be automatically available to all scripts
+    - export PROJECT_VERSION=2.1.0
+    - export NODE_ENV=development
+    - export API_BASE_URL=https://api.example.com
+    - export DEBUG_MODE=true
+    - echo "Environment configured for $NODE_ENV"
+  scripts:
+    - name: build
+      description: Build the application
+      commands:
+        - echo "Building version $PROJECT_VERSION for $NODE_ENV"
+        - npm run build
+        - echo "Build completed for version $PROJECT_VERSION"
+
+    - name: test
+      description: Run tests with environment context
+      commands:
+        - echo "Running tests in $NODE_ENV mode"
+        - echo "API URL: $API_BASE_URL"
+        - echo "Debug enabled: $DEBUG_MODE"
+        - npm test
+
+    - name: deploy
+      description: Deploy application
+      commands:
+        - echo "Deploying version $PROJECT_VERSION"
+        - echo "Target environment: $NODE_ENV"
+        - echo "API endpoint: $API_BASE_URL"
+        # Deploy commands would use these variables
+```
+
+Usage:
+
+```bash
+# All scripts automatically have access to the startup variables
+miko-shell run build    # Uses PROJECT_VERSION, NODE_ENV, etc.
+miko-shell run test     # Same variables available
+miko-shell run deploy   # Variables persist across all script executions
+```
 
 ## 7. Configuration Patterns
 
