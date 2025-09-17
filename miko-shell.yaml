@@ -1,7 +1,7 @@
 name: miko-shell-dev
 container:
   provider: docker
-  image: golang:1.23-alpine
+  image: golang:1.24-alpine
   setup:
     - apk add --no-cache git make curl wget bash
     - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -12,7 +12,7 @@ shell:
     - export PROJECT_VERSION=1.2.3
     - export BUILD_TARGET=production
     - export DEBUG_MODE=true
-    - export GO_VERSION=1.23
+    - export GO_VERSION=1.24
     - |
       cat <<'EOF'
              _ _               _       _ _ 
