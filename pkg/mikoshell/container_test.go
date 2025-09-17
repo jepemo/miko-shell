@@ -225,7 +225,7 @@ func TestEnvironmentVariableCapture(t *testing.T) {
 			providerName: "docker",
 		},
 		{
-			name:         "PodmanProvider", 
+			name:         "PodmanProvider",
 			providerName: "podman",
 		},
 	}
@@ -245,7 +245,7 @@ func TestEnvironmentVariableCapture(t *testing.T) {
 					// This test verifies the script generation includes the environment capture logic
 					// Since we can't easily test the actual script execution without a container,
 					// we'll test that the expected commands are present in the generated script
-					
+
 					// The script should contain these environment capture commands:
 					expectedCommands := []string{
 						"env | sort > /tmp/env-before.txt",
@@ -253,7 +253,7 @@ func TestEnvironmentVariableCapture(t *testing.T) {
 						"comm -13 /tmp/env-before.txt /tmp/env-after.txt",
 						"echo '#!/bin/sh' > /etc/profile.d/miko-shell-env.sh",
 					}
-					
+
 					// Create a mock script and verify it contains the expected logic
 					// This is a structural test to ensure the function includes environment capture
 					for _, cmd := range expectedCommands {
@@ -270,11 +270,11 @@ func TestEnvironmentVariableCapture(t *testing.T) {
 					// Similar test for Podman provider
 					expectedCommands := []string{
 						"env | sort > /tmp/env-before.txt",
-						"env | sort > /tmp/env-after.txt", 
+						"env | sort > /tmp/env-after.txt",
 						"comm -13 /tmp/env-before.txt /tmp/env-after.txt",
 						"echo '#!/bin/sh' > /etc/profile.d/miko-shell-env.sh",
 					}
-					
+
 					for _, cmd := range expectedCommands {
 						t.Logf("Expected command in podman startup script: %s", cmd)
 					}
@@ -289,32 +289,28 @@ func TestStartupScriptGeneration(t *testing.T) {
 	// Test Docker provider script generation
 	t.Run("Docker startup script generation", func(t *testing.T) {
 		dockerProvider := &DockerProvider{}
-		
+
 		// Since we can't easily mock the actual RunShellWithStartup without refactoring,
 		// this test documents the expected behavior that should be implemented
 		t.Log("Docker provider should generate startup script with environment capture")
 		t.Log("Expected: env capture before startup commands")
-		t.Log("Expected: env capture after startup commands") 
+		t.Log("Expected: env capture after startup commands")
 		t.Log("Expected: diff and persist environment changes")
-		
-		// Verify the provider exists and is correct type
-		if dockerProvider == nil {
-			t.Error("DockerProvider should not be nil")
-		}
+
+		// Verify the provider is of correct type
+		_ = dockerProvider // Use the variable to avoid unused variable warning
 	})
 
-	// Test Podman provider script generation  
+	// Test Podman provider script generation
 	t.Run("Podman startup script generation", func(t *testing.T) {
 		podmanProvider := &PodmanProvider{}
-		
+
 		t.Log("Podman provider should generate startup script with environment capture")
 		t.Log("Expected: env capture before startup commands")
 		t.Log("Expected: env capture after startup commands")
 		t.Log("Expected: diff and persist environment changes")
-		
-		// Verify the provider exists and is correct type
-		if podmanProvider == nil {
-			t.Error("PodmanProvider should not be nil")
-		}
+
+		// Verify the provider is of correct type
+		_ = podmanProvider // Use the variable to avoid unused variable warning
 	})
 }

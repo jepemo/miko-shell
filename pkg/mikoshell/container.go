@@ -114,13 +114,13 @@ if [ -s /tmp/env_new.txt ]; then
 fi
 
 # Run the actual command in the same shell context
-%s`, 
-			startupScript.String(), 
+%s`,
+			startupScript.String(),
 			commandStr)
 
 		return d.runContainer(cfg, tag, []string{"/bin/sh", "-c", fullCommand}, false)
 	}
-	
+
 	// No startup commands, run directly
 	return d.runContainer(cfg, tag, command, false)
 }
@@ -561,13 +561,13 @@ if [ -s /tmp/env_new.txt ]; then
 fi
 
 # Run the actual command in the same shell context
-%s`, 
-			startupScript.String(), 
+%s`,
+			startupScript.String(),
 			commandStr)
 
 		return p.runContainer(cfg, tag, []string{"/bin/sh", "-c", fullCommand}, false)
 	}
-	
+
 	// No startup commands, run directly
 	return p.runContainer(cfg, tag, command, false)
 }
